@@ -169,7 +169,18 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
     (U r S R α hα ∘ₗ U r S R β hβ) =
     U r S R (α * β) (hα.mul hβ) := by
-  sorry -- #584, long
+  ext a
+  rw[U, U, U]
+  simp
+  apply (Subtype.coe_inj).mp
+  conv_rhs =>
+    apply AbstractHeckeOperator.HeckeOperator_apply
+  conv_lhs =>
+    apply AbstractHeckeOperator.HeckeOperator_apply
+  conv_lhs =>
+    arg 1; ext; arg 1; ext; arg 2;
+    apply AbstractHeckeOperator.HeckeOperator_apply
+
 
 lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
