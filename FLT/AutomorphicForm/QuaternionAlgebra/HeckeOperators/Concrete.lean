@@ -87,7 +87,7 @@ variable (D : Type*) [Ring D] [Algebra F D] [IsQuaternionAlgebra F D]
 -- an isomorphism D ⊗_F 𝔸_F^f = M₂(𝔸_F^f))
 variable (r : Rigidification F D)
 
--- Let S be a finite set of finite plaes of F (the level)
+-- Let S be a finite set of finite places of F (the level)
 variable (S : Finset (HeightOneSpectrum (𝓞 F)))
 
 -- let P be a good prime
@@ -165,6 +165,12 @@ noncomputable def U {v : HeightOneSpectrum (𝓞 F)}
 lemma _root_.Ne.mul {M₀ : Type*} [Mul M₀] [Zero M₀] [NoZeroDivisors M₀] {a b : M₀}
   (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 := mul_ne_zero ha hb
 
+-- local
+lemma U_coset {v : HeightOneSpectrum (𝓞 F)}
+    {α : v.adicCompletionIntegers F} (hα : α ≠ 0) :
+      ↑(adicCompletionIntegers F v)⧸(AddSubgroup.map (AddMonoidHom.mulLeft α) (⊤  : AddSubgroup ↑(adicCompletionIntegers F v)))    := sorry
+
+
 lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
     (U r S R α hα ∘ₗ U r S R β hβ) =
@@ -180,7 +186,7 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
   conv_lhs =>
     arg 1; ext; arg 1; ext; arg 2;
     apply AbstractHeckeOperator.HeckeOperator_apply
-
+  
 
 lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
