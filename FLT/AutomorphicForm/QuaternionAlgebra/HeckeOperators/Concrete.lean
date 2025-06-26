@@ -200,18 +200,19 @@ noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicComplet
       by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero]; rw [mul_inv_cancel₀]; exact_mod_cast hα }
   exact Matrix.unitOfDetInvertible !![(α : v.adicCompletion F), t; 0, 1]
 
+-- test lemma
 variable {F v} in
 lemma test : (gt α hα (α-1)) 0 1 = (α-1) := rfl
 
 variable {F v} in
-noncomputable def singleCosets : Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(GL2.localTameLevel v)) :=
--- TODO
-  (QuotientGroup.mk '' ((GL2.localTameLevel v) * g α hα • ↑(GL2.localTameLevel v) ))
---  ↑(adicCompletionIntegers F v)⧸(AddSubgroup.map (AddMonoidHom.mulLeft α) (⊤  : AddSubgroup ↑(adicCompletionIntegers F v)))
+noncomputable def singleCosetsFunction (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α) (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
+  ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(GL2.localTameLevel v)) := by
+  let tLift : ↑(adicCompletionIntegers F v) := Quot.out t
+  exact QuotientGroup.mk (gt α hα tLift)
 
 variable {F v} in
-lemma U_coset : doubleCosets α hα = singleCosets α hα :=
-  sorry
+lemma U_coset : doubleCosets α hα = singleCosets α hα := sorry
+-- should instead show singleCosetsFunction is a bijection between the set doubleCosets and ⊤
 
 end CosetComputation
 
