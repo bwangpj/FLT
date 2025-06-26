@@ -165,11 +165,55 @@ noncomputable def U {v : HeightOneSpectrum (𝓞 F)}
 lemma _root_.Ne.mul {M₀ : Type*} [Mul M₀] [Zero M₀] [NoZeroDivisors M₀] {a b : M₀}
   (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 := mul_ne_zero ha hb
 
--- local
-lemma U_coset {v : HeightOneSpectrum (𝓞 F)}
-    {α : v.adicCompletionIntegers F} (hα : α ≠ 0) :
-      ↑(adicCompletionIntegers F v)⧸(AddSubgroup.map (AddMonoidHom.mulLeft α) (⊤  : AddSubgroup ↑(adicCompletionIntegers F v)))    := sorry
+open scoped Pointwise
 
+section CosetComputation
+-- local F_v
+
+set_option synthInstance.maxHeartbeats 0
+
+variable (v : HeightOneSpectrum (𝓞 F))
+variable (α : v.adicCompletionIntegers F)
+variable (hα : α ≠ 0)
+
+variable {F v} in
+noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
+  Matrix.GeneralLinearGroup.diagonal (![⟨(α : v.adicCompletion F),
+    (α : v.adicCompletion F)⁻¹, by
+      rw [mul_inv_cancel₀]
+      exact_mod_cast hα, by
+      rw [inv_mul_cancel₀]
+      exact_mod_cast hα⟩, 1])
+
+variable {F v} in
+noncomputable def doubleCosets :
+  Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(GL2.localTameLevel v)) :=
+  (QuotientGroup.mk '' ((GL2.localTameLevel v) * g α hα • ↑(GL2.localTameLevel v) ))
+
+variable {F v} in
+noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicCompletion F v)) := by
+  let gtInv : Invertible !![(α : v.adicCompletion F), t; 0, 1].det :=
+  { invOf := (α : v.adicCompletion F)⁻¹,
+    invOf_mul_self :=
+      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero]; rw [inv_mul_cancel₀]; exact_mod_cast hα,
+    mul_invOf_self :=
+      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero]; rw [mul_inv_cancel₀]; exact_mod_cast hα }
+  exact Matrix.unitOfDetInvertible !![(α : v.adicCompletion F), t; 0, 1]
+
+variable {F v} in
+lemma test : (gt α hα (α-1)) 0 1 = (α-1) := rfl
+
+variable {F v} in
+noncomputable def singleCosets : Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(GL2.localTameLevel v)) :=
+-- TODO
+  (QuotientGroup.mk '' ((GL2.localTameLevel v) * g α hα • ↑(GL2.localTameLevel v) ))
+--  ↑(adicCompletionIntegers F v)⧸(AddSubgroup.map (AddMonoidHom.mulLeft α) (⊤  : AddSubgroup ↑(adicCompletionIntegers F v)))
+
+variable {F v} in
+lemma U_coset : doubleCosets α hα = singleCosets α hα :=
+  sorry
+
+end CosetComputation
 
 lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
@@ -177,7 +221,8 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     U r S R (α * β) (hα.mul hβ) := by
   ext a
   rw[U, U, U]
-  simp
+  simp only [MulEquiv.toMonoidHom_eq_coe, LinearMap.coe_comp, Function.comp_apply,
+    MulMemClass.coe_mul, mul_inv_rev]
   apply (Subtype.coe_inj).mp
   conv_rhs =>
     apply AbstractHeckeOperator.HeckeOperator_apply
@@ -186,7 +231,8 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
   conv_lhs =>
     arg 1; ext; arg 1; ext; arg 2;
     apply AbstractHeckeOperator.HeckeOperator_apply
-  
+
+  sorry
 
 lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
