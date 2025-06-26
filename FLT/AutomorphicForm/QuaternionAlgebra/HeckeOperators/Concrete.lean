@@ -176,6 +176,9 @@ variable (v : HeightOneSpectrum (𝓞 F))
 variable (α : v.adicCompletionIntegers F)
 variable (hα : α ≠ 0)
 
+variable {F α hα} in
+noncomputable def U1v : Subgroup (GL (Fin 2) (adicCompletion F v)) := (GL2.localTameLevel v)
+
 variable {F v} in
 noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
   Matrix.GeneralLinearGroup.diagonal (![⟨(α : v.adicCompletion F),
@@ -187,17 +190,19 @@ noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
 
 variable {F v} in
 noncomputable def doubleCosets :
-  Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(GL2.localTameLevel v)) :=
-  (QuotientGroup.mk '' ((GL2.localTameLevel v) * g α hα • ↑(GL2.localTameLevel v) ))
+  Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(U1v v)) :=
+  (QuotientGroup.mk '' ((U1v v) * g α hα • ↑(U1v v) ))
 
 variable {F v} in
 noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicCompletion F v)) := by
   let gtInv : Invertible !![(α : v.adicCompletion F), t; 0, 1].det :=
   { invOf := (α : v.adicCompletion F)⁻¹,
     invOf_mul_self :=
-      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero]; rw [inv_mul_cancel₀]; exact_mod_cast hα,
+      by simp only [Matrix.det_fin_two_of,
+        mul_one, mul_zero, sub_zero]; rw [inv_mul_cancel₀]; exact_mod_cast hα,
     mul_invOf_self :=
-      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero]; rw [mul_inv_cancel₀]; exact_mod_cast hα }
+      by simp only [Matrix.det_fin_two_of,
+        mul_one, mul_zero, sub_zero]; rw [mul_inv_cancel₀]; exact_mod_cast hα }
   exact Matrix.unitOfDetInvertible !![(α : v.adicCompletion F), t; 0, 1]
 
 -- test lemma
@@ -205,14 +210,32 @@ variable {F v} in
 lemma test : (gt α hα (α-1)) 0 1 = (α-1) := rfl
 
 variable {F v} in
-noncomputable def singleCosetsFunction (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α) (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
-  ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(GL2.localTameLevel v)) := by
+noncomputable def singleCosetsFunction
+  (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
+    (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
+  ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(U1v v)) := by
   let tLift : ↑(adicCompletionIntegers F v) := Quot.out t
   exact QuotientGroup.mk (gt α hα tLift)
 
 variable {F v} in
-lemma U_coset : doubleCosets α hα = singleCosets α hα := sorry
--- should instead show singleCosetsFunction is a bijection between the set doubleCosets and ⊤
+lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
+  constructor
+  · sorry
+  constructor
+  · intro t₁ h₁ t₂ h₂ h
+    rw[singleCosetsFunction, singleCosetsFunction] at h
+    have h₀ := QuotientGroup.eq.mp h
+    rw[gt, gt] at h₀
+    have m : (gt α hα (Quot.out t₁))⁻¹ * gt α hα (Quot.out t₂)
+      = !![1, (α : v.adicCompletion F)⁻¹ * ((Quot.out t₂) - (Quot.out t₁)); 0, 1] := by
+        rw [gt, gt]
+        simp only [Matrix.coe_units_inv]
+        rw [Matrix.inv_def]
+        -- TODO
+        sorry
+    -- rw_mod_cast[m] at h₀
+    sorry
+  sorry
 
 end CosetComputation
 
@@ -232,7 +255,7 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
   conv_lhs =>
     arg 1; ext; arg 1; ext; arg 2;
     apply AbstractHeckeOperator.HeckeOperator_apply
-
+  #check U_coset α hα
   sorry
 
 lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
