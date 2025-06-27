@@ -226,8 +226,72 @@ noncomputable def singleCosetsFunction
 
 variable {F v} in
 lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
+  have r (A : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) [Invertible A.det] :
+    (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) = A := rfl
   constructor
-  · sorry
+  · intro t h
+    have m : (gt α hα (Quotient.out t)) =  ht ↑(Quotient.out t) * g α hα := by
+        have r₁ : (g α hα : Matrix (Fin 2) (Fin 2) (adicCompletion F v))
+          = !![↑α, 0; 0, 1] := by
+          rw[g]
+          ext i j
+          rw[Matrix.GeneralLinearGroup.diagonal]
+          fin_cases i
+          · fin_cases j
+            · simp
+            simp
+          fin_cases j
+          · simp
+          simp
+        ext i j; push_cast
+        rw[gt, ht, r₁]
+        rw[r, r]
+        rw[Matrix.mul_apply]
+        simp only [Fin.sum_univ_two, Fin.isValue]
+        fin_cases i
+        · fin_cases j
+          · simp
+          simp
+        simp
+    rw[singleCosetsFunction, m, doubleCosets]
+    use (ht ↑(Quotient.out t) * g α hα)
+    constructor
+    · use ht ↑(Quotient.out t)
+      constructor
+      · rw[ht]
+        constructor
+        · let htInt : ((Matrix (Fin 2) (Fin 2) ↥(adicCompletionIntegers F v))ˣ) := by
+            let htInv : Invertible !![1, (Quotient.out t); 0, 1].det :=
+            { invOf := 1,
+              invOf_mul_self :=
+              by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero],
+              mul_invOf_self :=
+              by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero] }
+            exact Matrix.unitOfDetInvertible !![1, (Quotient.out t); 0, 1]
+          use htInt
+          refine Units.eq_iff.mp ?_
+          rw[r]
+          have ho : (htInt = !![1, (Quotient.out t); 0, 1]) := rfl
+          rw[Units.coe_map, ho]
+          simp only [RingHom.toMonoidHom_eq_coe, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+            ValuationSubring.coe_subtype]
+          ext i j
+          fin_cases i
+          · fin_cases j
+            · simp
+            simp
+          fin_cases j
+          · simp
+          simp
+        rw[r]
+        simp
+      use g α hα
+      simp only [and_true]
+      use (1 : GL (Fin 2) (adicCompletion F v))
+      simp only [SetLike.mem_coe, smul_eq_mul, mul_one, and_true]
+      exact Subgroup.one_mem (U1v v)
+    rfl
+
   constructor
   · intro t₁ h₁ t₂ h₂ h
     rw[singleCosetsFunction, singleCosetsFunction] at h
@@ -237,8 +301,18 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
         (( - (Quotient.out t₁) + (Quotient.out t₂)) : adicCompletion F v )) := by
         apply inv_mul_eq_iff_eq_mul.mpr
         rw [gt, gt, ht]
-
-        sorry
+        ext i j; push_cast
+        rw[r, r, r]
+        rw[Matrix.mul_apply]
+        simp only [Fin.sum_univ_two, Fin.isValue]
+        fin_cases i
+        · fin_cases j
+          · simp
+          simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one, Matrix.of_apply, Matrix.cons_val',
+            Matrix.cons_val_one, Matrix.cons_val_fin_one, Matrix.cons_val_zero, mul_one]
+          rw[← mul_assoc, mul_inv_cancel₀, one_mul]; ring
+          have hα₁ := Subtype.coe_ne_coe.mpr hα; assumption
+        simp
     rw[m] at h₀
     obtain ⟨ ⟨ x, y ⟩ , z ⟩ := h₀
     apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 0 1) at y
@@ -261,6 +335,17 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     rw[w, ← mul_assoc, mul_inv_cancel₀, one_mul]
     have hα₁ := Subtype.coe_ne_coe.mpr hα; assumption
 
+  intro c h
+  obtain ⟨ c₀, ⟨ ⟨ c₁, h₁, ⟨ l, ⟨ ⟨ c₂, ⟨ h₂, z ⟩ ⟩ , hl ⟩ ⟩ ⟩ , h₀ ⟩ ⟩ := h
+  have hp : c₀ = c₁ * (g α hα) * c₂ := by
+    rw[← hl, ← z]; simp only [smul_eq_mul]; rw[mul_assoc]
+  obtain ⟨ ⟨ x, y ⟩ , z ⟩ := h₁
+  let t : ↥(adicCompletionIntegers F v) ⧸ AddSubgroup.map (AddMonoidHom.mulLeft α) ⊤ := ↑(x 0 1)
+  use t
+  simp only [Set.top_eq_univ, Set.mem_univ, true_and]
+  rw[singleCosetsFunction, gt, ← h₀]
+  apply QuotientGroup.eq.mpr
+  -- TODO
   sorry
 
 end CosetComputation
