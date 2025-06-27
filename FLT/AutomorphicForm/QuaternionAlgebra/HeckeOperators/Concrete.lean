@@ -171,6 +171,7 @@ section CosetComputation
 -- local F_v
 
 set_option synthInstance.maxHeartbeats 0
+set_option maxHeartbeats 1000000
 
 variable (v : HeightOneSpectrum (𝓞 F))
 variable (α : v.adicCompletionIntegers F)
@@ -209,6 +210,16 @@ noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicComplet
 variable {F v} in
 lemma test : (gt α hα (α-1)) 0 1 = (α-1) := rfl
 
+variable {F v α hα} in
+noncomputable def ht (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) := by
+  let htInv : Invertible !![1, t; 0, 1].det :=
+  { invOf := 1,
+    invOf_mul_self :=
+      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero],
+    mul_invOf_self :=
+      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero] }
+  exact Matrix.unitOfDetInvertible !![1, t; 0, 1]
+
 variable {F v} in
 noncomputable def singleCosetsFunction
   (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
@@ -225,15 +236,16 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
   · intro t₁ h₁ t₂ h₂ h
     rw[singleCosetsFunction, singleCosetsFunction] at h
     have h₀ := QuotientGroup.eq.mp h
-    rw[gt, gt] at h₀
     have m : (gt α hα (Quot.out t₁))⁻¹ * gt α hα (Quot.out t₂)
-      = !![1, (α : v.adicCompletion F)⁻¹ * ((Quot.out t₂) - (Quot.out t₁)); 0, 1] := by
-        rw [gt, gt]
-        simp only [Matrix.coe_units_inv]
-        rw [Matrix.inv_def]
-        -- TODO
+      = ht ((α : v.adicCompletion F)⁻¹ *
+        (((Quot.out t₂) - (Quot.out t₁)) : adicCompletion F v )) := by
+        apply inv_mul_eq_iff_eq_mul.mpr
+        rw [gt, gt, ht]
+
         sorry
-    -- rw_mod_cast[m] at h₀
+    rw[m] at h₀
+    obtain ⟨ ⟨ x, y ⟩ , z ⟩ := h₀
+    -- have y₁ := (Matrix.ext_iff.mpr (Subtype.coe_inj.mpr y)) 0 1
     sorry
   sorry
 
