@@ -206,10 +206,6 @@ noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicComplet
         mul_one, mul_zero, sub_zero]; rw [mul_inv_cancel₀]; exact_mod_cast hα }
   exact Matrix.unitOfDetInvertible !![(α : v.adicCompletion F), t; 0, 1]
 
--- test lemma
-variable {F v} in
-lemma test : (gt α hα (α-1)) 0 1 = (α-1) := rfl
-
 variable {F v α hα} in
 noncomputable def ht (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) := by
   let htInv : Invertible !![1, t; 0, 1].det :=
@@ -225,7 +221,7 @@ noncomputable def singleCosetsFunction
   (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
     (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
   ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(U1v v)) := by
-  let tLift : ↑(adicCompletionIntegers F v) := Quot.out t
+  let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
   exact QuotientGroup.mk (gt α hα tLift)
 
 variable {F v} in
@@ -236,17 +232,35 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
   · intro t₁ h₁ t₂ h₂ h
     rw[singleCosetsFunction, singleCosetsFunction] at h
     have h₀ := QuotientGroup.eq.mp h
-    have m : (gt α hα (Quot.out t₁))⁻¹ * gt α hα (Quot.out t₂)
+    have m : (gt α hα (Quotient.out t₁))⁻¹ * gt α hα (Quotient.out t₂)
       = ht ((α : v.adicCompletion F)⁻¹ *
-        (((Quot.out t₂) - (Quot.out t₁)) : adicCompletion F v )) := by
+        (( - (Quotient.out t₁) + (Quotient.out t₂)) : adicCompletion F v )) := by
         apply inv_mul_eq_iff_eq_mul.mpr
         rw [gt, gt, ht]
 
         sorry
     rw[m] at h₀
     obtain ⟨ ⟨ x, y ⟩ , z ⟩ := h₀
-    -- have y₁ := (Matrix.ext_iff.mpr (Subtype.coe_inj.mpr y)) 0 1
-    sorry
+    apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 0 1) at y
+    rw[ht] at y
+    simp only [RingHom.toMonoidHom_eq_coe, Fin.isValue, Units.coe_map, MonoidHom.coe_coe,
+      RingHom.mapMatrix_apply, ValuationSubring.coe_subtype, Matrix.map_apply] at y
+    have w : ((x 0 1) : adicCompletion F v) = (α : v.adicCompletion F)⁻¹ *
+        (( - (Quotient.out t₁) + (Quotient.out t₂)) : adicCompletion F v ) := by
+        rw[y]; rfl
+    conv_lhs =>
+      apply Eq.symm (QuotientAddGroup.out_eq' t₁)
+    conv_rhs =>
+      apply Eq.symm (QuotientAddGroup.out_eq' t₂)
+    apply QuotientAddGroup.eq.mpr
+    use (x 0 1)
+    constructor
+    · simp
+    simp only [Fin.isValue, AddMonoidHom.coe_mulLeft]
+    apply (Subtype.coe_inj).mp; push_cast
+    rw[w, ← mul_assoc, mul_inv_cancel₀, one_mul]
+    have hα₁ := Subtype.coe_ne_coe.mpr hα; assumption
+
   sorry
 
 end CosetComputation
@@ -268,6 +282,8 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     arg 1; ext; arg 1; ext; arg 2;
     apply AbstractHeckeOperator.HeckeOperator_apply
   #check U_coset α hα
+  #check RestrictedProduct.mem_coset_and_mulSupport_subset_of_isProductAt
+
   sorry
 
 lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
