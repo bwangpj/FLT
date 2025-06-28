@@ -385,7 +385,7 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
   let t : ↥(adicCompletionIntegers F v) ⧸ AddSubgroup.map (AddMonoidHom.mulLeft α) ⊤ := b * dinv
   use t
   simp only [Set.top_eq_univ, Set.mem_univ, true_and]
-  rw[singleCosetsFunction, gt, ← h₀]
+  rw[singleCosetsFunction, ← h₀]
   apply QuotientGroup.eq.mpr
   rw[hp, ← mul_assoc]
   have uele (u₁ : GL (Fin 2) (adicCompletion F v)) (hu₁ : u₁ ∈ U1v v)
@@ -393,11 +393,19 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     u₁ * u₂ ∈ U1v v := by
     exact (Subgroup.mul_mem_cancel_right (U1v v) hu₂).mpr hu₁
   apply uele
-  · rw[g, ← y]
-    simp only [RingHom.toMonoidHom_eq_coe, Units.map_mk, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
-      ValuationSubring.coe_subtype]
-    constructor
-    · sorry
+  · let muMatrix : Matrix (Fin 2) (Fin 2) (adicCompletion F v) :=
+      !![a-(Quotient.out t)*c, (α : adicCompletion F v)⁻¹ * (b-(Quotient.out t)*d); c*α, d]
+    let mup : GL (Fin 2) (adicCompletion F v) := (gt α hα (Quotient.out t))⁻¹ * (co₁ * g α hα)
+    have hmup : mup = (gt α hα (Quotient.out t))⁻¹ * (co₁ * g α hα) := rfl
+    have m : mup = muMatrix := by
+      rw[hmup, gt, g, ← y]
+      simp only [RingHom.toMonoidHom_eq_coe,
+        Units.map_mk, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+        ValuationSubring.coe_subtype]
+      -- push_cast; rw[r]
+      sorry
+    rw[← hmup]
+
     sorry
   assumption
 
