@@ -335,16 +335,21 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     rw[w, ← mul_assoc, mul_inv_cancel₀, one_mul]
     have hα₁ := Subtype.coe_ne_coe.mpr hα; assumption
 
-  intro c h
-  obtain ⟨ c₀, ⟨ ⟨ c₁, h₁, ⟨ l, ⟨ ⟨ c₂, ⟨ h₂, z ⟩ ⟩ , hl ⟩ ⟩ ⟩ , h₀ ⟩ ⟩ := h
-  have hp : c₀ = c₁ * (g α hα) * c₂ := by
+  intro co h
+  obtain ⟨ co₀, ⟨ ⟨ co₁, h₁, ⟨ l, ⟨ ⟨ co₂, ⟨ h₂, z ⟩ ⟩ , hl ⟩ ⟩ ⟩ , h₀ ⟩ ⟩ := h
+  have hp : co₀ = co₁ * (g α hα) * co₂ := by
     rw[← hl, ← z]; simp only [smul_eq_mul]; rw[mul_assoc]
-  obtain ⟨ ⟨ x, y ⟩ , z ⟩ := h₁
-  let t : ↥(adicCompletionIntegers F v) ⧸ AddSubgroup.map (AddMonoidHom.mulLeft α) ⊤ := ↑(x 0 1)
-  use t
-  simp only [Set.top_eq_univ, Set.mem_univ, true_and]
-  rw[singleCosetsFunction, gt, ← h₀]
-  apply QuotientGroup.eq.mpr
+  obtain ⟨ ⟨ ⟨ val_x₁, inv_x₁, val_inv_x₁, inv_val_x₁ ⟩ , y ⟩ , z ⟩ := h₁
+  let a : (adicCompletionIntegers F v) := (val_x₁ 0 0)
+  let b : (adicCompletionIntegers F v) := (val_x₁ 0 1)
+  let c : (adicCompletionIntegers F v) := (val_x₁ 1 0)
+  let d : (adicCompletionIntegers F v) := (val_x₁ 1 1)
+  have h11 : c * (inv_x₁ 0 1) + d * (inv_x₁ 1 1) = 1 := by calc
+    _ = (val_x₁ 1 0) * (inv_x₁ 0 1) + (val_x₁ 1 1) * (inv_x₁ 1 1) := rfl
+    _ = (val_x₁ * inv_x₁) 1 1 := by rw[Matrix.mul_apply]; simp
+    _ = 1 := by rw[val_inv_x₁]; simp
+
+
   -- TODO
   sorry
 
