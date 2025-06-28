@@ -348,6 +348,35 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     _ = (val_x₁ 1 0) * (inv_x₁ 0 1) + (val_x₁ 1 1) * (inv_x₁ 1 1) := rfl
     _ = (val_x₁ * inv_x₁) 1 1 := by rw[Matrix.mul_apply]; simp
     _ = 1 := by rw[val_inv_x₁]; simp
+  have valc : Valued.v (c : adicCompletion F v) < 1 := by
+    have hc : c = (val_x₁ 1 0) := rfl
+    rw[hc]
+    apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 1 0) at y
+    simp only [RingHom.toMonoidHom_eq_coe, Units.map_mk, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+      ValuationSubring.coe_subtype, Fin.isValue, Matrix.map_apply] at y
+    rw[y]
+    apply z.right
+  have maxc : c ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
+    apply (ValuationSubring.valuation_lt_one_iff (adicCompletionIntegers F v) c).mpr
+    have valc₁ : Valued.v.IsEquiv (adicCompletionIntegers F v).valuation := by
+      apply Valuation.isEquiv_valuation_valuationSubring
+    apply (Valuation.isEquiv_iff_val_lt_one.mp valc₁).mp
+    exact valc
+
+  have maxd : d ∉ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
+    by_contra maxd₁
+    have max1 : c * (inv_x₁ 0 1) + d * (inv_x₁ 1 1)
+      ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
+      apply Ideal.add_mem
+      repeat
+        apply Ideal.mul_mem_right
+        assumption
+    rw[h11] at max1
+    have nonunit : 1 ∈ nonunits ↥(adicCompletionIntegers F v) :=
+      (IsLocalRing.mem_maximalIdeal 1).mp max1
+    exact one_notMem_nonunits nonunit
+
+
 
 
   -- TODO
