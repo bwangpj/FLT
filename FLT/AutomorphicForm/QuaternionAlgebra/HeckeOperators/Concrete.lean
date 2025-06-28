@@ -362,7 +362,6 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
       apply Valuation.isEquiv_valuation_valuationSubring
     apply (Valuation.isEquiv_iff_val_lt_one.mp valc₁).mp
     exact valc
-
   have maxd : d ∉ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
     by_contra maxd₁
     have max1 : c * (inv_x₁ 0 1) + d * (inv_x₁ 1 1)
@@ -375,14 +374,12 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     have nonunit : 1 ∈ nonunits ↥(adicCompletionIntegers F v) :=
       (IsLocalRing.mem_maximalIdeal 1).mp max1
     exact one_notMem_nonunits nonunit
-
   have dunit : IsUnit d := by
     by_contra dnotunit
     have dnonunit : d ∈ nonunits ↥(adicCompletionIntegers F v) := mem_nonunits_iff.mpr dnotunit
     have dmax : d ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) :=
       (IsLocalRing.mem_maximalIdeal d).mpr dnonunit
     exact maxd dmax
-
   obtain ⟨ dinv, dvalinv, dinvval ⟩ := isUnit_iff_exists.mp dunit
 
   let t : ↥(adicCompletionIntegers F v) ⧸ AddSubgroup.map (AddMonoidHom.mulLeft α) ⊤ := b * dinv
