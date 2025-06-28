@@ -376,11 +376,34 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
       (IsLocalRing.mem_maximalIdeal 1).mp max1
     exact one_notMem_nonunits nonunit
 
+  have dunit : IsUnit d := by
+    by_contra dnotunit
+    have dnonunit : d ∈ nonunits ↥(adicCompletionIntegers F v) := mem_nonunits_iff.mpr dnotunit
+    have dmax : d ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) :=
+      (IsLocalRing.mem_maximalIdeal d).mpr dnonunit
+    exact maxd dmax
 
+  obtain ⟨ dinv, dvalinv, dinvval ⟩ := isUnit_iff_exists.mp dunit
 
+  let t : ↥(adicCompletionIntegers F v) ⧸ AddSubgroup.map (AddMonoidHom.mulLeft α) ⊤ := b * dinv
+  use t
+  simp only [Set.top_eq_univ, Set.mem_univ, true_and]
+  rw[singleCosetsFunction, gt, ← h₀]
+  apply QuotientGroup.eq.mpr
+  rw[hp, ← mul_assoc]
+  have uele (u₁ : GL (Fin 2) (adicCompletion F v)) (hu₁ : u₁ ∈ U1v v)
+    (u₂ : GL (Fin 2) (adicCompletion F v)) (hu₂ : u₂ ∈ U1v v) :
+    u₁ * u₂ ∈ U1v v := by
+    exact (Subgroup.mul_mem_cancel_right (U1v v) hu₂).mpr hu₁
+  apply uele
+  · rw[g, ← y]
+    simp only [RingHom.toMonoidHom_eq_coe, Units.map_mk, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+      ValuationSubring.coe_subtype]
+    constructor
+    · sorry
+    sorry
+  assumption
 
-  -- TODO
-  sorry
 
 end CosetComputation
 
