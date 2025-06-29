@@ -225,7 +225,7 @@ noncomputable def singleCosetsFunction
   let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
   exact QuotientGroup.mk (gt α hα tLift)
 
-set_option maxHeartbeats 300000 in
+set_option maxHeartbeats 400000
 -- explicit matrix coset computations
 variable {F v} in
 lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
@@ -395,6 +395,12 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     (u₂ : GL (Fin 2) (adicCompletion F v)) (hu₂ : u₂ ∈ U1v v) :
     u₁ * u₂ ∈ U1v v := by
     exact (Subgroup.mul_mem_cancel_right (U1v v) hu₂).mpr hu₁
+  have ht : t = b * dinv := rfl
+  rw[← QuotientAddGroup.out_eq' t] at ht
+  have ht₁ := QuotientAddGroup.eq.mp ht
+  obtain ⟨q, hq⟩ := ht₁
+  simp only [AddSubgroup.coe_top, Set.mem_univ, AddMonoidHom.coe_mulLeft, true_and] at hq
+  have hq₁ : Quotient.out t = b * dinv - α * q := by rw[hq]; ring
   apply uele
   · let muMatrix : Matrix (Fin 2) (Fin 2) (adicCompletion F v) :=
       !![a-(Quotient.out t)*c, (α : adicCompletion F v)⁻¹ * (b-(Quotient.out t)*d); c*α, d]
@@ -410,7 +416,6 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
           Matrix.adjugate_fin_two_of, neg_zero, Matrix.smul_of, Matrix.smul_cons, smul_eq_mul,
           mul_neg, Matrix.smul_empty, neg_mul, EmbeddingLike.apply_eq_iff_eq]
         rw [inv_mul_cancel₀]; exact_mod_cast hα
-
       have hp2 : co₁ = !![(a : adicCompletion F v),b;c,d] := by
         rw[← y]
         ext i j
@@ -424,7 +429,6 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
         fin_cases j
         · simp; rfl
         simp; rfl
-
       have hp3 : g α hα = !![(α : adicCompletion F v), 0;0,1] := by
         rw[g]
         ext i j
@@ -436,7 +440,6 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
         fin_cases j
         · simp; rfl
         simp; rfl
-
       rw[hmup]; push_cast; rw[hp2, hp3]
       norm_cast; rw[hp1]
       unfold muMatrix
@@ -446,8 +449,6 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
         Matrix.empty_add_empty, Matrix.empty_mul, Equiv.symm_apply_apply, neg_smul, Matrix.neg_cons,
         Matrix.neg_empty, zero_smul, one_smul, EmbeddingLike.apply_eq_iff_eq]
       ring_nf
-
-
       ext i j
       fin_cases i
       · fin_cases j
@@ -463,6 +464,32 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
 
     rw[← hmup]
 
+    let muMatrixInt : Matrix (Fin 2) (Fin 2) (adicCompletionIntegers F v) :=
+      !![a-(Quotient.out t)*c, q*d; c*α, d]
+    have inteq : (RingHom.mapMatrix ((v.adicCompletionIntegers F).subtype)).toMonoidHom
+      muMatrixInt = muMatrix := by
+      simp only [RingHom.toMonoidHom_eq_coe, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+        ValuationSubring.coe_subtype]
+      unfold muMatrixInt muMatrix
+      ext i j
+      fin_cases i
+      · fin_cases j
+        · simp
+        simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one, Matrix.map_apply, Matrix.of_apply,
+          Matrix.cons_val', Matrix.cons_val_one, Matrix.cons_val_fin_one, Matrix.cons_val_zero,
+          MulMemClass.coe_mul]
+        rw[hq₁]
+        ring_nf
+        sorry -- algebra
+      fin_cases j
+      · simp
+      simp
+    rw[← m] at inteq
+
+    constructor
+    · -- image of unit
+      sorry
+    -- in localTameLevel
     sorry
   assumption
 
