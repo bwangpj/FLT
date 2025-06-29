@@ -171,7 +171,6 @@ section CosetComputation
 -- local F_v
 
 set_option synthInstance.maxHeartbeats 0
-set_option maxHeartbeats 1000000
 
 variable (v : HeightOneSpectrum (𝓞 F))
 variable (α : v.adicCompletionIntegers F)
@@ -224,6 +223,8 @@ noncomputable def singleCosetsFunction
   let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
   exact QuotientGroup.mk (gt α hα tLift)
 
+set_option maxHeartbeats 300000 in
+-- explicit matrix coset computations
 variable {F v} in
 lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
   have r (A : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) [Invertible A.det] :
@@ -398,12 +399,66 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     let mup : GL (Fin 2) (adicCompletion F v) := (gt α hα (Quotient.out t))⁻¹ * (co₁ * g α hα)
     have hmup : mup = (gt α hα (Quotient.out t))⁻¹ * (co₁ * g α hα) := rfl
     have m : mup = muMatrix := by
-      rw[hmup, gt, g, ← y]
-      simp only [RingHom.toMonoidHom_eq_coe,
-        Units.map_mk, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
-        ValuationSubring.coe_subtype]
-      -- push_cast; rw[r]
-      sorry
+      have hp1 : (gt α hα (Quotient.out t))⁻¹
+        = !![(α : adicCompletion F v)⁻¹, -(α : adicCompletion F v)⁻¹*(Quotient.out t);0,1] := by
+        rw[gt]
+        push_cast; rw[r]
+        rw[Matrix.inv_def]
+        simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero, Ring.inverse_eq_inv',
+          Matrix.adjugate_fin_two_of, neg_zero, Matrix.smul_of, Matrix.smul_cons, smul_eq_mul,
+          mul_neg, Matrix.smul_empty, neg_mul, EmbeddingLike.apply_eq_iff_eq]
+        rw [inv_mul_cancel₀]; exact_mod_cast hα
+
+      have hp2 : co₁ = !![(a : adicCompletion F v),b;c,d] := by
+        rw[← y]
+        ext i j
+        simp only [RingHom.toMonoidHom_eq_coe, Units.map_mk, MonoidHom.coe_coe,
+          RingHom.mapMatrix_apply, ValuationSubring.coe_subtype, Matrix.map_apply, Matrix.of_apply,
+          Matrix.cons_val', Matrix.cons_val_fin_one]
+        fin_cases i
+        · fin_cases j
+          · simp; rfl
+          simp; rfl
+        fin_cases j
+        · simp; rfl
+        simp; rfl
+
+      have hp3 : g α hα = !![(α : adicCompletion F v), 0;0,1] := by
+        rw[g]
+        ext i j
+        simp only [Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_fin_one]
+        fin_cases i
+        · fin_cases j
+          · simp; rfl
+          simp; rfl
+        fin_cases j
+        · simp; rfl
+        simp; rfl
+
+      rw[hmup]; push_cast; rw[hp2, hp3]
+      norm_cast; rw[hp1]
+      unfold muMatrix
+      simp only [neg_mul, Matrix.cons_mul, Nat.succ_eq_add_one, Nat.reduceAdd, Matrix.vecMul_cons,
+        Matrix.head_cons, Matrix.smul_cons, smul_eq_mul, mul_zero, Matrix.smul_empty,
+        Matrix.tail_cons, mul_one, Matrix.empty_vecMul, add_zero, Matrix.add_cons, zero_add,
+        Matrix.empty_add_empty, Matrix.empty_mul, Equiv.symm_apply_apply, neg_smul, Matrix.neg_cons,
+        Matrix.neg_empty, zero_smul, one_smul, EmbeddingLike.apply_eq_iff_eq]
+      ring_nf
+
+
+      ext i j
+      fin_cases i
+      · fin_cases j
+        · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.zero_eta, Fin.isValue,
+          Matrix.cons_val', Matrix.cons_val_zero, Matrix.cons_val_fin_one]
+          rw [mul_inv_cancel₀]
+          · simp
+          exact_mod_cast hα
+        simp
+      fin_cases j
+      · simp
+      simp
+
     rw[← hmup]
 
     sorry
