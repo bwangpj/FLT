@@ -225,12 +225,15 @@ noncomputable def singleCosetsFunction
   let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
   exact QuotientGroup.mk (gt α hα tLift)
 
-set_option maxHeartbeats 400000
+set_option maxHeartbeats 500000 in
 -- explicit matrix coset computations
 variable {F v} in
+omit [IsTotallyReal F] in
 lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
   have r (A : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) = A := rfl
+  have valc₁ : Valued.v.IsEquiv (adicCompletionIntegers F v).valuation := by
+    apply Valuation.isEquiv_valuation_valuationSubring
   constructor
   · intro t h
     have m : (gt α hα (Quotient.out t)) =  ht ↑(Quotient.out t) * g α hα := by
@@ -361,8 +364,6 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
     apply z.right
   have maxc : c ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
     apply (ValuationSubring.valuation_lt_one_iff (adicCompletionIntegers F v) c).mpr
-    have valc₁ : Valued.v.IsEquiv (adicCompletionIntegers F v).valuation := by
-      apply Valuation.isEquiv_valuation_valuationSubring
     apply (Valuation.isEquiv_iff_val_lt_one.mp valc₁).mp
     exact valc
   have maxd : d ∉ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
@@ -466,12 +467,46 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
 
     let muMatrixInt : Matrix (Fin 2) (Fin 2) (adicCompletionIntegers F v) :=
       !![a-(Quotient.out t)*c, q*d; c*α, d]
-    have inteq : (RingHom.mapMatrix ((v.adicCompletionIntegers F).subtype)).toMonoidHom
-      muMatrixInt = muMatrix := by
+
+    have intdet : muMatrixInt.det = a*d-b*c := by
+      unfold muMatrixInt
+      rw[Matrix.det_fin_two_of]
+      rw[hq₁]
+      ring_nf
+      rw[mul_assoc b dinv c, mul_comm dinv c, mul_assoc, mul_assoc, dinvval]
+      ring
+
+    let val_x₁_unit : (Matrix (Fin 2) (Fin 2) ↥(adicCompletionIntegers F v))ˣ :=
+      { val := val_x₁, inv := inv_x₁, val_inv := val_inv_x₁, inv_val := inv_val_x₁ }
+
+    have val_x₁_det_unit :
+      IsUnit (val_x₁_unit : Matrix (Fin 2) (Fin 2) ↥(adicCompletionIntegers F v)).det :=
+      Matrix.isUnits_det_units val_x₁_unit
+
+    have val_x₁_det :
+      (val_x₁_unit : Matrix (Fin 2) (Fin 2) ↥(adicCompletionIntegers F v)).det = a*d-b*c := by
+      unfold val_x₁_unit a b c d
+      push_cast
+      apply Matrix.det_fin_two_of
+
+    rw[val_x₁_det, ← intdet] at val_x₁_det_unit
+    have muMatrixIntUnit : IsUnit muMatrixInt :=
+      (Matrix.isUnit_iff_isUnit_det muMatrixInt).mpr val_x₁_det_unit
+
+    obtain ⟨ muMatrixIntUnitval , hmuMatrixIntUnitval ⟩ := muMatrixIntUnit
+
+    have inteq : (Units.map (RingHom.mapMatrix ((v.adicCompletionIntegers F).subtype)).toMonoidHom)
+      muMatrixIntUnitval = mup := by
       simp only [RingHom.toMonoidHom_eq_coe, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
         ValuationSubring.coe_subtype]
-      unfold muMatrixInt muMatrix
       ext i j
+      rw[m]
+      unfold muMatrix
+      simp only [Units.coe_map, MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+        ValuationSubring.coe_subtype, Matrix.map_apply, Matrix.of_apply, Matrix.cons_val',
+        Matrix.cons_val_fin_one]
+      rw[hmuMatrixIntUnitval]
+      unfold muMatrixInt
       fin_cases i
       · fin_cases j
         · simp
@@ -479,18 +514,68 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
           Matrix.cons_val', Matrix.cons_val_one, Matrix.cons_val_fin_one, Matrix.cons_val_zero,
           MulMemClass.coe_mul]
         rw[hq₁]
-        ring_nf
-        sorry -- algebra
+        ring_nf; push_cast
+        rw[mul_sub_left_distrib]
+        rw[mul_assoc (d : adicCompletion F v) (α : adicCompletion F v)⁻¹
+          ((α : adicCompletion F v) * (q : adicCompletion F v))]
+        rw[← mul_assoc (α : adicCompletion F v)⁻¹ (α : adicCompletion F v) (q : adicCompletion F v)]
+        rw[inv_mul_cancel₀]
+        · rw[mul_comm (d : adicCompletion F v) (α : adicCompletion F v)⁻¹]
+          rw[mul_comm (b : adicCompletion F v) (dinv : adicCompletion F v)]
+          rw[mul_assoc, ← mul_assoc
+            (d : adicCompletion F v) (dinv : adicCompletion F v) (b : adicCompletion F v)]
+          norm_cast; rw[dvalinv]
+          push_cast; ring_nf
+        exact_mod_cast hα
       fin_cases j
       · simp
       simp
-    rw[← m] at inteq
 
     constructor
-    · -- image of unit
-      sorry
+    · use muMatrixIntUnitval
     -- in localTameLevel
-    sorry
+    rw[m]; unfold muMatrix
+    simp only [Fin.isValue, Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_zero,
+      Matrix.cons_val_fin_one, Matrix.cons_val_one]
+    norm_cast
+    constructor
+    · have valad : Valued.v ((a - d) : adicCompletion F v) < 1 := by
+        have ha : a = (val_x₁ 0 0) := rfl
+        have hd : d = (val_x₁ 1 1) := rfl
+
+        rw[ha, hd]
+        have va : (val_x₁ 0 0) = co₁ 0 0 := by
+          apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 0 0) at y
+          simp only [RingHom.toMonoidHom_eq_coe, Units.map_mk,
+            MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+            ValuationSubring.coe_subtype, Fin.isValue, Matrix.map_apply] at y
+          exact y
+        have vd : (val_x₁ 1 1) = co₁ 1 1 := by
+          apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 1 1) at y
+          simp only [RingHom.toMonoidHom_eq_coe, Units.map_mk,
+            MonoidHom.coe_coe, RingHom.mapMatrix_apply,
+            ValuationSubring.coe_subtype, Fin.isValue, Matrix.map_apply] at y
+          exact y
+        rw[va, vd]
+        apply z.left
+      norm_cast at valad
+      have maxad : (a-d) ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
+        apply (ValuationSubring.valuation_lt_one_iff (adicCompletionIntegers F v) (a-d)).mpr
+        apply (Valuation.isEquiv_iff_val_lt_one.mp valc₁).mp
+        exact valad
+      rw[sub_right_comm]
+      have maxadc : (a - d - Quotient.out t * c)
+        ∈ IsLocalRing.maximalIdeal (adicCompletionIntegers F v) := by
+        apply Ideal.sub_mem
+        · assumption
+        apply Ideal.mul_mem_left
+        assumption
+      apply (Valuation.isEquiv_iff_val_lt_one.mp valc₁).mpr
+      exact (ValuationSubring.valuation_lt_one_iff (adicCompletionIntegers F v) _).mp maxadc
+    have maxcα : c*α ∈ IsLocalRing.maximalIdeal ↥(adicCompletionIntegers F v) := by
+      exact Ideal.mul_mem_right α (IsLocalRing.maximalIdeal ↥(adicCompletionIntegers F v)) maxc
+    apply (Valuation.isEquiv_iff_val_lt_one.mp valc₁).mpr
+    exact (ValuationSubring.valuation_lt_one_iff (adicCompletionIntegers F v) (c*α)).mp maxcα
   assumption
 
 
