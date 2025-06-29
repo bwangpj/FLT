@@ -170,7 +170,7 @@ open scoped Pointwise
 section CosetComputation
 -- local F_v
 
-set_option synthInstance.maxHeartbeats 0
+-- set_option synthInstance.maxHeartbeats 0
 
 variable (v : HeightOneSpectrum (𝓞 F))
 variable (α : v.adicCompletionIntegers F)
@@ -188,6 +188,8 @@ noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
       rw [inv_mul_cancel₀]
       exact_mod_cast hα⟩, 1])
 
+set_option synthInstance.maxHeartbeats 0 in
+-- double coset space
 variable {F v} in
 noncomputable def doubleCosets :
   Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(U1v v)) :=
