@@ -177,10 +177,10 @@ variable (α : v.adicCompletionIntegers F)
 variable (hα : α ≠ 0)
 
 variable {F α hα} in
-noncomputable def U1v : Subgroup (GL (Fin 2) (adicCompletion F v)) := (GL2.localTameLevel v)
+private noncomputable def U1v : Subgroup (GL (Fin 2) (adicCompletion F v)) := (GL2.localTameLevel v)
 
 variable {F v} in
-noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
+private noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
   Matrix.GeneralLinearGroup.diagonal (![⟨(α : v.adicCompletion F),
     (α : v.adicCompletion F)⁻¹, by
       rw [mul_inv_cancel₀]
@@ -191,12 +191,13 @@ noncomputable def g : (GL (Fin 2) (adicCompletion F v)) :=
 set_option synthInstance.maxHeartbeats 0 in
 -- double coset space
 variable {F v} in
-noncomputable def doubleCosets :
+private noncomputable def doubleCosets :
   Set ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(U1v v)) :=
   (QuotientGroup.mk '' ((U1v v) * g α hα • ↑(U1v v) ))
 
 variable {F v} in
-noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicCompletion F v)) := by
+private noncomputable def gt (t : v.adicCompletionIntegers F) :
+  (GL (Fin 2) (adicCompletion F v)) := by
   let gtInv : Invertible !![(α : v.adicCompletion F), t; 0, 1].det :=
   { invOf := (α : v.adicCompletion F)⁻¹,
     invOf_mul_self :=
@@ -208,7 +209,7 @@ noncomputable def gt (t : v.adicCompletionIntegers F) : (GL (Fin 2) (adicComplet
   exact Matrix.unitOfDetInvertible !![(α : v.adicCompletion F), t; 0, 1]
 
 variable {F v α hα} in
-noncomputable def ht (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) := by
+private noncomputable def ht (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) := by
   let htInv : Invertible !![1, t; 0, 1].det :=
   { invOf := 1,
     invOf_mul_self :=
@@ -218,7 +219,7 @@ noncomputable def ht (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)
   exact Matrix.unitOfDetInvertible !![1, t; 0, 1]
 
 variable {F v} in
-noncomputable def singleCosetsFunction
+private noncomputable def singleCosetsFunction
   (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
     (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
   ((GL (Fin 2) (adicCompletion F v)) ⧸ ↑(U1v v)) := by
@@ -229,7 +230,7 @@ set_option maxHeartbeats 500000 in
 -- explicit matrix coset computations
 variable {F v} in
 omit [IsTotallyReal F] in
-lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
+private lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα) := by
   have r (A : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) = A := rfl
   have valc₁ : Valued.v.IsEquiv (adicCompletionIntegers F v).valuation := by
