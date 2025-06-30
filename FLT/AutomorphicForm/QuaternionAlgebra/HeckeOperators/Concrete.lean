@@ -601,7 +601,65 @@ private noncomputable def doubleCosets_global :
   Set (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F) ⧸ ↑(U1_global S)) :=
    (QuotientGroup.mk '' (↑(U1_global S) * (g_global α hα) • ↑(U1_global S)))
 
---TODO
+variable {F v α hα} in
+private noncomputable def tadele (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F) :=
+    letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
+    ⟨fun i ↦ if h : i = v then h ▸ t else 0, by
+      apply Set.Finite.subset (Set.finite_singleton v)
+      simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
+      intro w hw
+      contrapose! hw
+      rw [dif_neg hw]
+      exact ValuationSubring.zero_mem (HeightOneSpectrum.adicCompletionIntegers F w)⟩
+
+variable {F v α hα} in
+private noncomputable def tadele1 (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F) :=
+    letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
+    ⟨fun i ↦ if h : i = v then h ▸ t else 1, by
+      apply Set.Finite.subset (Set.finite_singleton v)
+      simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
+      intro w hw
+      contrapose! hw
+      rw [dif_neg hw]
+      exact ValuationSubring.one_mem (HeightOneSpectrum.adicCompletionIntegers F w)⟩
+
+variable {F v α hα} in
+private noncomputable def GL2toAdele (A : GL (Fin 2) (v.adicCompletion F)) :
+    GL (Fin 2) (FiniteAdeleRing (𝓞 F) F) := by
+  letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
+  let detidele : (FiniteAdeleRing (𝓞 F) F)ˣ :=
+    FiniteAdeleRing.localUnit F A.det
+  have det : !![tadele1 (A 0 0), tadele (A 0 1); tadele (A 1 0), tadele1 (A 1 1)].det
+    = detidele := by
+    simp only [Fin.isValue, Matrix.det_fin_two_of]
+    rw[tadele, tadele, tadele1, tadele1]
+    ext i
+    if h : i = v then
+      rw[h]; simp only [Fin.isValue, RestrictedProduct.sub_apply, RestrictedProduct.mul_apply,
+        RestrictedProduct.mk_apply, ↓reduceDIte]
+      unfold detidele
+      rw[FiniteAdeleRing.localUnit]; simp only [Fin.isValue,
+        Matrix.GeneralLinearGroup.val_det_apply, RestrictedProduct.mk_apply, ↓reduceDIte]
+      rw[← Matrix.det_fin_two]
+    else
+      simp only [Fin.isValue, RestrictedProduct.sub_apply, RestrictedProduct.mul_apply,
+        RestrictedProduct.mk_apply, ↓reduceDIte]
+      unfold detidele
+      rw[FiniteAdeleRing.localUnit]; simp only [Fin.isValue,
+        Matrix.GeneralLinearGroup.val_det_apply, RestrictedProduct.mk_apply, ↓reduceDIte]
+      rw[dif_neg (h), dif_neg (h), dif_neg (h), dif_neg (h), dif_neg (h)]
+      simp
+  let aInv : Invertible
+    !![tadele1 (A 0 0), tadele (A 0 1); tadele (A 1 0), tadele1 (A 1 1)].det :=
+  { invOf := detidele.inv,
+    invOf_mul_self :=
+      by rw[det]; simp,
+    mul_invOf_self :=
+      by rw[det]; simp }
+  exact Matrix.unitOfDetInvertible
+    !![tadele1 (A 0 0), tadele (A 0 1); tadele (A 1 0), tadele1 (A 1 1)]
+
+
 variable {F v} in
 private noncomputable def gt_global (t : v.adicCompletionIntegers F) :
   (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F)) := by
@@ -613,15 +671,8 @@ private noncomputable def gt_global (t : v.adicCompletionIntegers F) :
       exact_mod_cast hα, by
       rw [inv_mul_cancel₀]
       exact_mod_cast hα⟩
-  let tadele : (FiniteAdeleRing (𝓞 F) F) :=
-    ⟨fun i ↦ if h : i = v then (by rw[h]; exact (t : adicCompletion F v)) else 0, by
-      apply Set.Finite.subset (Set.finite_singleton v)
-      simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
-      intro w hw
-      contrapose! hw
-      rw [dif_neg hw]
-      exact ValuationSubring.zero_mem (HeightOneSpectrum.adicCompletionIntegers F w)⟩
-  let gtInv : Invertible !![(αidele : (FiniteAdeleRing (𝓞 F) F)), tadele; 0, 1].det :=
+  let gtInv : Invertible
+    !![(αidele : (FiniteAdeleRing (𝓞 F) F)), (tadele (t : adicCompletion F v)); 0, 1].det :=
   { invOf := αidele.inv,
     invOf_mul_self :=
       by simp only [Matrix.det_fin_two_of,
@@ -629,7 +680,8 @@ private noncomputable def gt_global (t : v.adicCompletionIntegers F) :
     mul_invOf_self :=
       by simp only [Matrix.det_fin_two_of,
         mul_one, mul_zero, sub_zero]; rw [αidele.val_inv] }
-  exact Matrix.unitOfDetInvertible !![(αidele : (FiniteAdeleRing (𝓞 F) F)), tadele; 0, 1]
+  exact Matrix.unitOfDetInvertible
+    !![(αidele : (FiniteAdeleRing (𝓞 F) F)), (tadele (t : adicCompletion F v)); 0, 1]
 
 variable {F v} in
 private noncomputable def singleCosetsFunction_global
@@ -642,11 +694,18 @@ private noncomputable def singleCosetsFunction_global
 variable {F v} in
 private lemma U_coset_global :
   Set.BijOn (singleCosetsFunction_global S α hα) ⊤ (doubleCosets_global S α hα) := by
-
+  constructor
+  · intro t h
+    rw[singleCosetsFunction_global, doubleCosets_global ]
+    sorry
+  constructor
+  · sorry
   sorry
 
 end CosetComputation
 
+set_option maxHeartbeats 300000 in
+-- explicit matrix coset computations
 lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
     (U r S R α hα ∘ₗ U r S R β hβ) =
@@ -654,7 +713,7 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
   ext a
   rw[U, U, U]
   simp only [MulEquiv.toMonoidHom_eq_coe, LinearMap.coe_comp, Function.comp_apply,
-    MulMemClass.coe_mul, mul_inv_rev]
+    mul_inv_rev]
   apply (Subtype.coe_inj).mp
   conv_rhs =>
     apply AbstractHeckeOperator.HeckeOperator_apply
@@ -663,10 +722,19 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
   conv_lhs =>
     arg 1; ext; arg 1; ext; arg 2;
     apply AbstractHeckeOperator.HeckeOperator_apply
-  #check U_coset α hα
-  #check RestrictedProduct.mem_coset_and_mulSupport_subset_of_isProductAt
+
+  rw[← g_global]
+  case h.hα => assumption
+  rw[← g_global]
+  case h.hα => assumption
+  rw[← g_global]
+  case h.hα => exact (hα.mul hβ)
+
 
   sorry
+
+
+
 
 lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
