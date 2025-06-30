@@ -613,6 +613,9 @@ lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
 
 end HeckeOperator
 
+#check HeckeOperator.U_coset
+
+
 open HeckeOperator
 
 /-- `HeckeAlgebra F D r S R` is the Hecke algebra associated to the weight 2
