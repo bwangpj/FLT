@@ -579,6 +579,71 @@ private lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCoset
     exact (ValuationSubring.valuation_lt_one_iff (adicCompletionIntegers F v) (c*α)).mp maxcα
   assumption
 
+variable {F v α hα} in
+private noncomputable def U1_global : Subgroup (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F))
+  := (GL2.TameLevel S)
+
+variable {F v r} in
+private noncomputable def g_global : (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F)) :=
+  letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
+  (Matrix.GeneralLinearGroup.diagonal
+    (![FiniteAdeleRing.localUnit F ⟨(α : v.adicCompletion F),
+      (α : v.adicCompletion F)⁻¹, by
+      rw [mul_inv_cancel₀]
+      exact_mod_cast hα, by
+      rw [inv_mul_cancel₀]
+      exact_mod_cast hα⟩, 1]))
+
+set_option synthInstance.maxHeartbeats 0 in
+-- double coset space
+variable {F v} in
+private noncomputable def doubleCosets_global :
+  Set (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F) ⧸ ↑(U1_global S)) :=
+   (QuotientGroup.mk '' (↑(U1_global S) * (g_global α hα) • ↑(U1_global S)))
+
+--TODO
+variable {F v} in
+private noncomputable def gt_global (t : v.adicCompletionIntegers F) :
+  (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F)) := by
+  letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
+  let αidele : (FiniteAdeleRing (𝓞 F) F)ˣ :=
+    FiniteAdeleRing.localUnit F ⟨(α : v.adicCompletion F),
+      (α : v.adicCompletion F)⁻¹, by
+      rw [mul_inv_cancel₀]
+      exact_mod_cast hα, by
+      rw [inv_mul_cancel₀]
+      exact_mod_cast hα⟩
+  let tadele : (FiniteAdeleRing (𝓞 F) F) :=
+    ⟨fun i ↦ if h : i = v then (by rw[h]; exact (t : adicCompletion F v)) else 0, by
+      apply Set.Finite.subset (Set.finite_singleton v)
+      simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
+      intro w hw
+      contrapose! hw
+      rw [dif_neg hw]
+      exact ValuationSubring.zero_mem (HeightOneSpectrum.adicCompletionIntegers F w)⟩
+  let gtInv : Invertible !![(αidele : (FiniteAdeleRing (𝓞 F) F)), tadele; 0, 1].det :=
+  { invOf := αidele.inv,
+    invOf_mul_self :=
+      by simp only [Matrix.det_fin_two_of,
+        mul_one, mul_zero, sub_zero]; rw [αidele.inv_val],
+    mul_invOf_self :=
+      by simp only [Matrix.det_fin_two_of,
+        mul_one, mul_zero, sub_zero]; rw [αidele.val_inv] }
+  exact Matrix.unitOfDetInvertible !![(αidele : (FiniteAdeleRing (𝓞 F) F)), tadele; 0, 1]
+
+variable {F v} in
+private noncomputable def singleCosetsFunction_global
+  (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
+    (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
+  (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F) ⧸ ↑(U1_global S)) := by
+  let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
+  exact QuotientGroup.mk (gt_global α hα tLift)
+
+variable {F v} in
+private lemma U_coset_global :
+  Set.BijOn (singleCosetsFunction_global S α hα) ⊤ (doubleCosets_global S α hα) := by
+
+  sorry
 
 end CosetComputation
 
@@ -612,9 +677,6 @@ lemma U_comm {v : HeightOneSpectrum (𝓞 F)}
   rw [mul_comm]
 
 end HeckeOperator
-
-#check HeckeOperator.U_coset
-
 
 open HeckeOperator
 
