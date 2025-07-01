@@ -677,13 +677,13 @@ noncomputable def g_global : (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F)) :=
       rw [inv_mul_cancel₀]
       exact_mod_cast hα⟩, 1]))
 
-/-
-set_option maxHeartbeats 300000 in
--- explicit matrix coset computations
+
+
 variable {F v r} in
+omit [IsTotallyReal F] in
 lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] :
   g_global α hα = GL2toAdele (g α hα) := by
-  unfold g_global; rw[GL2toAdele]
+  unfold g_global; rw[GL2toAdele, g]
   ext i j v₁
   rw[Matrix.GeneralLinearGroup.diagonal]
   push_cast
@@ -691,19 +691,31 @@ lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] :
   have r (A : Matrix (Fin 2) (Fin 2) (FiniteAdeleRing (𝓞 F) F)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (FiniteAdeleRing (𝓞 F) F)) = A := rfl
   rw[r, tadele, tadele1, tadele, tadele1,
-    FiniteAdeleRing.localUnit, g, Matrix.GeneralLinearGroup.diagonal]
+    FiniteAdeleRing.localUnit, Matrix.GeneralLinearGroup.diagonal]
+  simp only [Matrix.of_apply, Fin.isValue, Matrix.diagonal_apply_eq, Matrix.cons_val_zero, ne_eq,
+    zero_ne_one, not_false_eq_true, Matrix.diagonal_apply_ne, one_ne_zero, Matrix.cons_val_one,
+    Matrix.cons_val_fin_one, Units.val_one, Matrix.cons_val']
   fin_cases i
   · fin_cases j
     · simp
-      sorry
-    simp
-    sorry
+    simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one, zero_ne_one, ↓reduceIte,
+      RestrictedProduct.zero_apply, Matrix.cons_val_one, Matrix.cons_val_fin_one,
+      Matrix.cons_val_zero, RestrictedProduct.mk_apply, right_eq_dite_iff]; intro h₁
+    cases (tadele._proof_4 v₁ (Eq.mpr_prop (Eq.refl (v₁ = v)) h₁))
+    rfl
   fin_cases j
-  · simp
-    sorry
-  simp
-  sorry
--/
+  · simp only [Fin.mk_one, Fin.isValue, Fin.zero_eta, one_ne_zero, ↓reduceIte,
+    RestrictedProduct.zero_apply, Matrix.cons_val_zero, Matrix.cons_val_one,
+    RestrictedProduct.mk_apply, right_eq_dite_iff]
+    intro h₁
+    cases (tadele._proof_4 v₁ (Eq.mpr_prop (Eq.refl (v₁ = v)) h₁))
+    rfl
+  simp only [Fin.mk_one, Fin.isValue, ↓reduceIte, Matrix.cons_val_one, Matrix.cons_val_fin_one,
+    Units.val_one, RestrictedProduct.one_apply, RestrictedProduct.mk_apply, right_eq_dite_iff]
+  intro h₁
+  cases (tadele._proof_4 v₁ (Eq.mpr_prop (Eq.refl (v₁ = v)) h₁))
+  rfl
+
 
 set_option synthInstance.maxHeartbeats 0 in
 -- double coset space
@@ -731,6 +743,14 @@ variable {F v} in
 lemma U_coset_global (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F))] :
   Set.BijOn (singleCosetsFunction_global S α hα) ⊤ (doubleCosets_global S α hα) := by
   obtain ⟨ loc₁ , loc₂, loc₃ ⟩ := U_coset α hα
+  have utoAdele (A : GL (Fin 2) (v.adicCompletion F)) :
+    A ∈ ((U1v v) : Set (GL (Fin 2) (adicCompletion F v)))
+      → GL2toAdele (A) ∈ ((U1_global S) : Set (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F))) := by
+    intro hA
+    constructor
+    · sorry
+
+    sorry
   constructor
   · intro t h
     rw[singleCosetsFunction_global, doubleCosets_global ]
@@ -738,6 +758,12 @@ lemma U_coset_global (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F))]
     rw[singleCosetsFunction] at loc
     obtain ⟨ x, ⟨ y₁, y₂ ⟩ ⟩ := loc
     use GL2toAdele x
+    obtain ⟨ u1, hu1, gu2, ⟨ u2, hu2, hgu2 ⟩, u3 ⟩ := y₁
+    constructor
+    · constructor
+      · sorry
+      sorry
+    rw[gt_global]
 
     sorry
   constructor
