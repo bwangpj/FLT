@@ -585,7 +585,7 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
 variable {F v α hα} in
 noncomputable def tadele (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F) :=
     letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
-    ⟨fun i ↦ if h : i = v then (by rw[h]; exact (t : v.adicCompletion F)) else 0, by
+    ⟨fun i ↦ if h : i = v then h \t t else 0, by
       apply Set.Finite.subset (Set.finite_singleton v)
       simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
       intro w hw
@@ -596,7 +596,7 @@ noncomputable def tadele (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F)
 variable {F v α hα} in
 noncomputable def tadele1 (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F) :=
     letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
-    ⟨fun i ↦ if h : i = v then (by rw[h]; exact (t : v.adicCompletion F)) else 1, by
+    ⟨fun i ↦ if h : i = v then h \t t else 1, by
       apply Set.Finite.subset (Set.finite_singleton v)
       simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
       intro w hw
@@ -662,6 +662,7 @@ lemma GL2toAdeleInv (A : GL (Fin 2) (v.adicCompletion F)) [DecidableEq (HeightOn
   · simp
   simp
 
+
 variable {F v α hα} in
 noncomputable def U1_global : Subgroup (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F))
   := (GL2.TameLevel S)
@@ -677,6 +678,9 @@ noncomputable def g_global : (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F)) :=
       rw [inv_mul_cancel₀]
       exact_mod_cast hα⟩, 1]))
 
+/-
+set_option maxHeartbeats 300000 in
+-- explicit matrix coset computations
 variable {F v r} in
 lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] : g_global α hα = GL2toAdele (g α hα) := by
   unfold g_global; rw[GL2toAdele]
@@ -686,30 +690,19 @@ lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] : g_global α hα 
   rw[Matrix.diagonal]
   have r (A : Matrix (Fin 2) (Fin 2) (FiniteAdeleRing (𝓞 F) F)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (FiniteAdeleRing (𝓞 F) F)) = A := rfl
-  rw[r, tadele, tadele1, FiniteAdeleRing.localUnit, g, Matrix.GeneralLinearGroup.diagonal]
+  rw[r, tadele, tadele1, tadele, tadele1, FiniteAdeleRing.localUnit, g, Matrix.GeneralLinearGroup.diagonal]
   fin_cases i
   · fin_cases j
-    · simp; rfl
-    simp only [Fin.zero_eta, Fin.isValue, Fin.mk_one, Matrix.of_apply, zero_ne_one, ↓reduceIte,
-      RestrictedProduct.zero_apply, Matrix.diagonal_apply_eq, Matrix.cons_val_zero, ne_eq,
-      not_false_eq_true, Matrix.diagonal_apply_ne, one_ne_zero, Matrix.cons_val_one,
-      Matrix.cons_val_fin_one, Units.val_one, Matrix.cons_val', RestrictedProduct.mk_apply,
-      right_eq_dite_iff]; intro h₁
-    apply eq_of_heq; apply HEq.symm; apply eqRec_heq;
+    · simp
+      sorry
+    simp
     sorry
   fin_cases j
-  · rw[tadele]; simp only [Fin.mk_one, Fin.isValue, Fin.zero_eta, Matrix.of_apply, one_ne_zero,
-    ↓reduceIte, RestrictedProduct.zero_apply, Matrix.diagonal_apply_eq, Matrix.cons_val_zero, ne_eq,
-    zero_ne_one, not_false_eq_true, Matrix.diagonal_apply_ne, Matrix.cons_val_one,
-    Matrix.cons_val_fin_one, Units.val_one, Matrix.cons_val', RestrictedProduct.mk_apply,
-    right_eq_dite_iff]; intro h₁
+  · simp
     sorry
-  rw[tadele1]; simp only [Fin.mk_one, Fin.isValue, Matrix.of_apply, ↓reduceIte, Matrix.cons_val_one,
-    Matrix.cons_val_fin_one, Units.val_one, RestrictedProduct.one_apply, Matrix.diagonal_apply_eq,
-    Matrix.cons_val_zero, ne_eq, zero_ne_one, not_false_eq_true, Matrix.diagonal_apply_ne,
-    one_ne_zero, Matrix.cons_val', RestrictedProduct.mk_apply, right_eq_dite_iff]; intro h₁
+  simp
   sorry
-
+-/
 
 set_option synthInstance.maxHeartbeats 0 in
 -- double coset space
