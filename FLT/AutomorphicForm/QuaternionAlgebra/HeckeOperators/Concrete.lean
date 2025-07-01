@@ -585,7 +585,7 @@ lemma U_coset : Set.BijOn (singleCosetsFunction α hα) ⊤ (doubleCosets α hα
 variable {F v α hα} in
 noncomputable def tadele (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F) :=
     letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
-    ⟨fun i ↦ if h : i = v then h \t t else 0, by
+    ⟨fun i ↦ if h : i = v then h ▸ t else 0, by
       apply Set.Finite.subset (Set.finite_singleton v)
       simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
       intro w hw
@@ -596,7 +596,7 @@ noncomputable def tadele (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F)
 variable {F v α hα} in
 noncomputable def tadele1 (t : v.adicCompletion F) : (FiniteAdeleRing (𝓞 F) F) :=
     letI : DecidableEq (HeightOneSpectrum (𝓞 F)) := Classical.typeDecidableEq _
-    ⟨fun i ↦ if h : i = v then h \t t else 1, by
+    ⟨fun i ↦ if h : i = v then h ▸ t else 1, by
       apply Set.Finite.subset (Set.finite_singleton v)
       simp only [SetLike.mem_coe, Set.subset_singleton_iff, Set.mem_compl_iff, Set.mem_setOf_eq]
       intro w hw
@@ -621,7 +621,6 @@ noncomputable def GL2toAdele (A : GL (Fin 2) (v.adicCompletion F)) :
       unfold detidele
       rw[FiniteAdeleRing.localUnit]; simp only [Fin.isValue,
         Matrix.GeneralLinearGroup.val_det_apply, RestrictedProduct.mk_apply, ↓reduceDIte]
-      simp only [Fin.isValue, eq_mpr_eq_cast, cast_eq]
       rw[← Matrix.det_fin_two]
     else
       simp only [Fin.isValue, RestrictedProduct.sub_apply, RestrictedProduct.mul_apply,
@@ -682,7 +681,8 @@ noncomputable def g_global : (GL (Fin 2) (FiniteAdeleRing (𝓞 F) F)) :=
 set_option maxHeartbeats 300000 in
 -- explicit matrix coset computations
 variable {F v r} in
-lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] : g_global α hα = GL2toAdele (g α hα) := by
+lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] :
+  g_global α hα = GL2toAdele (g α hα) := by
   unfold g_global; rw[GL2toAdele]
   ext i j v₁
   rw[Matrix.GeneralLinearGroup.diagonal]
@@ -690,7 +690,8 @@ lemma g_global_alt [DecidableEq (HeightOneSpectrum (𝓞 F))] : g_global α hα 
   rw[Matrix.diagonal]
   have r (A : Matrix (Fin 2) (Fin 2) (FiniteAdeleRing (𝓞 F) F)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (FiniteAdeleRing (𝓞 F) F)) = A := rfl
-  rw[r, tadele, tadele1, tadele, tadele1, FiniteAdeleRing.localUnit, g, Matrix.GeneralLinearGroup.diagonal]
+  rw[r, tadele, tadele1, tadele, tadele1,
+    FiniteAdeleRing.localUnit, g, Matrix.GeneralLinearGroup.diagonal]
   fin_cases i
   · fin_cases j
     · simp
@@ -727,17 +728,75 @@ noncomputable def singleCosetsFunction_global
   exact QuotientGroup.mk (gt_global α hα tLift)
 
 variable {F v} in
-lemma U_coset_global :
+lemma U_coset_global (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F))] :
   Set.BijOn (singleCosetsFunction_global S α hα) ⊤ (doubleCosets_global S α hα) := by
   obtain ⟨ loc₁ , loc₂, loc₃ ⟩ := U_coset α hα
   constructor
   · intro t h
     rw[singleCosetsFunction_global, doubleCosets_global ]
     let loc := loc₁ h
-    obtain ⟨ x, y ⟩ := loc
+    rw[singleCosetsFunction] at loc
+    obtain ⟨ x, ⟨ y₁, y₂ ⟩ ⟩ := loc
+    use GL2toAdele x
+
     sorry
   constructor
-  · sorry
+  · intro t₁ h₁ t₂ h₂ h
+    apply loc₂
+    · assumption
+    · assumption
+    have hc := QuotientGroup.eq.mp h
+    obtain ⟨ hc₁, hc₂ ⟩ := hc
+    have hc₃ := hc₂ v vbad
+    simp only [map_mul, map_inv] at hc₃
+    rw[gt_global, gt_global] at hc₃
+    rw[GL2toAdeleInv, GL2toAdeleInv] at hc₃
+    rw[← U1v] at hc₃
+    have hc₄ := QuotientGroup.eq.mpr hc₃
+    rw[singleCosetsFunction]; assumption
+
+  intro co h
+  obtain ⟨ co₀, ⟨ ⟨ co₁, h₁, ⟨ l, ⟨ ⟨ co₂, ⟨ h₂, z ⟩ ⟩ , hl ⟩ ⟩ ⟩ , h₀ ⟩ ⟩ := h
+  have hp : co₀ = co₁ * (g_global α hα) * co₂ := by
+    rw[← hl, ← z]; simp only [smul_eq_mul]; rw[mul_assoc]
+  obtain ⟨ h₁x, h₁y ⟩ := h₁
+  have h₁yv := h₁y v vbad
+  rw[← U1v] at h₁yv
+  obtain ⟨ h₂x, h₂y ⟩ := h₂
+  have h₂yv := h₂y v vbad
+  rw[← U1v] at h₂yv
+  let co₀local : GL (Fin 2) (adicCompletion F v) :=
+    (FiniteAdeleRing.GL2.toAdicCompletion v) co₁ *
+      (g α hα) * (FiniteAdeleRing.GL2.toAdicCompletion v) co₂
+  have hlocal : (co₀local : (GL (Fin 2) (adicCompletion F v) ⧸ U1v v)) ∈ doubleCosets α hα := by
+    use (FiniteAdeleRing.GL2.toAdicCompletion v) co₁ *
+      (g α hα) * (FiniteAdeleRing.GL2.toAdicCompletion v) co₂
+    constructor
+    · constructor
+      · use (h₁y v vbad)
+        use (g α hα) * (FiniteAdeleRing.GL2.toAdicCompletion v) co₂
+        constructor
+        · use (FiniteAdeleRing.GL2.toAdicCompletion v) co₂
+          use (h₂y v vbad)
+          rfl
+        rw[mul_assoc]
+
+    unfold co₀local; rfl
+
+  obtain ⟨ t, ht ⟩ := loc₃ (hlocal)
+  use t
+  constructor
+  · exact ht.left
+  rw[← h₀]
+  rw[singleCosetsFunction_global]
+  apply QuotientGroup.eq.mpr
+
+  constructor
+  · intro v1
+    rw[hp]
+    -- use h₁x v1, h₂x v1
+    sorry
+  intro v1 hv1
   sorry
 
 end CosetComputation
