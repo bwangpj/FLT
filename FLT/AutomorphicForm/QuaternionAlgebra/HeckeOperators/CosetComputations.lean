@@ -32,11 +32,15 @@ variable {P : HeightOneSpectrum (𝓞 F)} (hP : P ∉ S)
 
 open TotallyDefiniteQuaternionAlgebra
 -- let's do T_P : S_2^D(U_1(S)) -> S_2^D(U_1(S))
-namespace TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm
+namespace TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm.HeckeOperator
 
 open IsDedekindDomain.HeightOneSpectrum
 
 open scoped TensorProduct
+
+variable (R : Type*) [CommRing R]
+
+namespace CosetComputations
 
 variable {F D} in
 open scoped TensorProduct.RightActions in
@@ -44,9 +48,6 @@ open scoped TensorProduct.RightActions in
 noncomputable abbrev U1 : Subgroup (D ⊗[F] (IsDedekindDomain.FiniteAdeleRing (𝓞 F) F))ˣ :=
   Subgroup.map (Units.map r.symm.toMonoidHom) (GL2.TameLevel S)
 
-variable (R : Type*) [CommRing R]
-
-namespace CosetComputations
 
 open scoped Pointwise
 
@@ -749,4 +750,4 @@ lemma U_coset_global_r (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F)
 
 end CosetComputations
 
-end TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm
+end TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm.HeckeOperator
