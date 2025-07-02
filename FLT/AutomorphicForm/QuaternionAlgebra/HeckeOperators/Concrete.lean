@@ -199,7 +199,6 @@ noncomputable def doubleCosets :
 
 variable {F v} in
 noncomputable def doubleCosetsReps :
-  Set ((GL (Fin 2) (adicCompletion F v))) :=
   Quotient.out '' (doubleCosets α hα)
 
 variable {F v} in
@@ -844,13 +843,11 @@ set_option maxHeartbeats 0 in
 -- double coset space
 variable {F D v} in
 noncomputable def doubleCosets_global_r :
-  Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ :=
-  Quotient.out ''
+  Set ((D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ ⧸ U1 r S) :=
     ((QuotientGroup.mk ''
       (((U1 r S) : Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ)
       * (g_global_r r α hα)
-      • ((U1 r S) : Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ)))
-        : Set ((D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ ⧸ U1 r S))
+      • ((U1 r S) : Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ))))
 
 set_option synthInstance.maxHeartbeats 0 in
 -- double coset space
@@ -858,13 +855,13 @@ variable {F D v} in
 noncomputable def singleCosetsFunction_global_r
   (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
     (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
-  (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ := by
+  (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ ⧸ U1 r S := by
   let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
-  exact (Units.map (AlgEquiv.symm r).toMulEquiv) (gt_global α hα tLift)
+  exact QuotientGroup.mk ((Units.map (AlgEquiv.symm r).toMulEquiv) (gt_global α hα tLift))
 
 variable {F D v} in
 lemma U_coset_global_r (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F))] :
-  Set.BijOn (singleCosetsFunction_global_r r α hα) ⊤ (doubleCosets_global_r r S α hα) := by
+  Set.BijOn (singleCosetsFunction_global_r r S α hα) ⊤ (doubleCosets_global_r r S α hα) := by
   constructor
   · sorry
   constructor
@@ -873,7 +870,7 @@ lemma U_coset_global_r (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F)
 
 end CosetComputation
 
-set_option maxHeartbeats 300000 in
+set_option maxHeartbeats 0 in
 -- explicit matrix coset computations
 lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     {α β : v.adicCompletionIntegers F} (hα : α ≠ 0) (hβ : β ≠ 0) :
@@ -892,12 +889,14 @@ lemma U_mul {v : HeightOneSpectrum (𝓞 F)}
     arg 1; ext; arg 1; ext; arg 2;
     apply AbstractHeckeOperator.HeckeOperator_apply
 
-  rw[← g_global]
+  have hγ : α * β ≠ 0 := (hα.mul hβ)
+
+  rw[← g_global, ← g_global_r, ← doubleCosets_global_r]
   case h.hα => assumption
-  rw[← g_global]
+  rw[← g_global, ← g_global_r, ← doubleCosets_global_r]
   case h.hα => assumption
-  rw[← g_global]
-  case h.hα => exact (hα.mul hβ)
+  rw[← g_global, ← g_global_r, ← doubleCosets_global_r]
+  case h.hα => assumption
 
 
   sorry
