@@ -13,6 +13,18 @@ import FLT.Mathlib.Topology.Algebra.RestrictedProduct
 
 open NumberField IsQuaternionAlgebra.NumberField IsDedekindDomain
 
+open TotallyDefiniteQuaternionAlgebra
+
+open IsDedekindDomain.HeightOneSpectrum
+
+open scoped TensorProduct
+
+open scoped Pointwise
+
+namespace TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm.HeckeOperator
+
+namespace CosetComputations
+
 -- let F be a totally real number field
 variable (F : Type*) [Field F] [NumberField F] [IsTotallyReal F]
 
@@ -30,36 +42,19 @@ variable (S : Finset (HeightOneSpectrum (𝓞 F)))
 -- let P be a good prime
 variable {P : HeightOneSpectrum (𝓞 F)} (hP : P ∉ S)
 
-open TotallyDefiniteQuaternionAlgebra
--- let's do T_P : S_2^D(U_1(S)) -> S_2^D(U_1(S))
-namespace TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm.HeckeOperator
-
-open IsDedekindDomain.HeightOneSpectrum
-
-open scoped TensorProduct
-
 variable (R : Type*) [CommRing R]
 
-namespace CosetComputations
+variable (v : HeightOneSpectrum (𝓞 F))
+
+variable (α : v.adicCompletionIntegers F)
+
+variable (hα : α ≠ 0)
 
 variable {F D} in
 open scoped TensorProduct.RightActions in
 /-- U1(S) -/
 noncomputable abbrev U1 : Subgroup (D ⊗[F] (IsDedekindDomain.FiniteAdeleRing (𝓞 F) F))ˣ :=
   Subgroup.map (Units.map r.symm.toMonoidHom) (GL2.TameLevel S)
-
-
-open scoped Pointwise
-
--- TODO: add private
-
--- local F_v
-
--- set_option synthInstance.maxHeartbeats 0
-
-variable (v : HeightOneSpectrum (𝓞 F))
-variable (α : v.adicCompletionIntegers F)
-variable (hα : α ≠ 0)
 
 variable {F α hα} in
 noncomputable def U1v : Subgroup (GL (Fin 2) (adicCompletion F v)) := (GL2.localTameLevel v)
