@@ -198,10 +198,6 @@ noncomputable def doubleCosets :
   (QuotientGroup.mk '' ((U1v v) * g α hα • ↑(U1v v) ))
 
 variable {F v} in
-noncomputable def doubleCosetsReps :
-  Quotient.out '' (doubleCosets α hα)
-
-variable {F v} in
 noncomputable def gt (t : v.adicCompletionIntegers F) :
   (GL (Fin 2) (adicCompletion F v)) := by
   let gtInv : Invertible !![(α : v.adicCompletion F), t; 0, 1].det :=
