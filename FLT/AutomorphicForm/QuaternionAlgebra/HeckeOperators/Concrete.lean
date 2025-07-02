@@ -198,6 +198,11 @@ noncomputable def doubleCosets :
   (QuotientGroup.mk '' ((U1v v) * g α hα • ↑(U1v v) ))
 
 variable {F v} in
+noncomputable def doubleCosetsReps :
+  Set ((GL (Fin 2) (adicCompletion F v))) :=
+  Quotient.out '' (doubleCosets α hα)
+
+variable {F v} in
 noncomputable def gt (t : v.adicCompletionIntegers F) :
   (GL (Fin 2) (adicCompletion F v)) := by
   let gtInv : Invertible !![(α : v.adicCompletion F), t; 0, 1].det :=
@@ -823,6 +828,47 @@ lemma U_coset_global (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F))]
     -- use h₁x v1, h₂x v1
     sorry
   intro v1 hv1
+  sorry
+
+open scoped TensorProduct.RightActions
+
+set_option synthInstance.maxHeartbeats 0 in
+-- double coset space
+variable {F D v} in
+noncomputable def g_global_r : (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ :=
+  (Units.map (AlgEquiv.symm r).toMulEquiv) (g_global α hα)
+
+set_option synthInstance.maxHeartbeats 0 in
+-- double coset space
+set_option maxHeartbeats 0 in
+-- double coset space
+variable {F D v} in
+noncomputable def doubleCosets_global_r :
+  Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ :=
+  Quotient.out ''
+    ((QuotientGroup.mk ''
+      (((U1 r S) : Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ)
+      * (g_global_r r α hα)
+      • ((U1 r S) : Set (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ)))
+        : Set ((D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ ⧸ U1 r S))
+
+set_option synthInstance.maxHeartbeats 0 in
+-- double coset space
+variable {F D v} in
+noncomputable def singleCosetsFunction_global_r
+  (t : ↑(adicCompletionIntegers F v) ⧸ (AddSubgroup.map (AddMonoidHom.mulLeft α)
+    (⊤ : AddSubgroup ↑(adicCompletionIntegers F v)))) :
+  (D ⊗[F] FiniteAdeleRing (𝓞 F) F)ˣ := by
+  let tLift : ↑(adicCompletionIntegers F v) := Quotient.out t
+  exact (Units.map (AlgEquiv.symm r).toMulEquiv) (gt_global α hα tLift)
+
+variable {F D v} in
+lemma U_coset_global_r (vbad : v ∈ S) [DecidableEq (HeightOneSpectrum (𝓞 F))] :
+  Set.BijOn (singleCosetsFunction_global_r r α hα) ⊤ (doubleCosets_global_r r S α hα) := by
+  constructor
+  · sorry
+  constructor
+  · sorry
   sorry
 
 end CosetComputation
