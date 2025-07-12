@@ -20,7 +20,7 @@ open scoped Pointwise
 namespace TotallyDefiniteQuaternionAlgebra.WeightTwoAutomorphicForm.HeckeOperator
 
 -- let F be a totally real number field
-variable (F : Type*) [Field F] [NumberField F] [IsTotallyReal F]
+variable (F : Type*) [Field F] [NumberField F]
 
 -- Let D/F be a quaternion algebra
 variable (D : Type*) [Ring D] [Algebra F D] [IsQuaternionAlgebra F D]
@@ -61,10 +61,29 @@ noncomputable abbrev g : (GL (Fin 2) (adicCompletion F v)) :=
       exact_mod_cast hα⟩, 1])
 
 variable {F v} in
+lemma g_def : (g α hα : Matrix (Fin 2) (Fin 2) (adicCompletion F v))
+  = !![↑α, 0; 0, 1] := by
+    rw[g]; ext i j
+    rw[Matrix.GeneralLinearGroup.diagonal]
+    fin_cases i; all_goals fin_cases j
+    all_goals simp
+
+variable {F v} in
 /-- The double coset space `U1 g U1` as a set of left cosets. -/
 noncomputable abbrev U1gU1 :
   Set ((GL (Fin 2) (adicCompletion F v)) ⧸ (U1 v)) :=
   (QuotientGroup.mk '' ((U1 v) * {g α hα}))
+
+variable {F v} in
+/-- The unipotent matrix element `!![1, t; 0, 1]`. -/
+noncomputable def GL2.unipotent (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) :=
+  let htInv : Invertible !![1, t; 0, 1].det :=
+  { invOf := 1,
+    invOf_mul_self :=
+      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero],
+    mul_invOf_self :=
+      by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero] }
+  Matrix.unitOfDetInvertible !![1, t; 0, 1]
 
 variable {F v} in
 /-- The matrix element `gt = !![α, t; 0, 1]`. -/
@@ -92,45 +111,29 @@ noncomputable abbrev gtU1
 set_option maxHeartbeats 600000 in
 -- long explicit matrix coset computations
 variable {F v} in
-omit [IsTotallyReal F] in
 /-- The double coset space `U1gU1` is the disjoint union of `gtU1`
 as t ranges over `O_v / αO_v`. -/
 lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := by
   have r (A : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) = A := rfl
-  have gr : (g α hα : Matrix (Fin 2) (Fin 2) (adicCompletion F v))
-    = !![↑α, 0; 0, 1] := by
-      rw[g]; ext i j
-      rw[Matrix.GeneralLinearGroup.diagonal]
-      fin_cases i; all_goals fin_cases j
-      all_goals simp
-
-  let ht (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) :=
-    let htInv : Invertible !![1, t; 0, 1].det :=
-    { invOf := 1,
-      invOf_mul_self :=
-        by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero],
-      mul_invOf_self :=
-        by simp only [Matrix.det_fin_two_of, mul_one, mul_zero, sub_zero] }
-    Matrix.unitOfDetInvertible !![1, t; 0, 1]
 
   constructor
   · -- Show that `gtU1` is contained in `U1gU1` for all t.
     intro t h
-    -- We have `gt = ht * g`.
-    have m : (gt α hα (Quotient.out t)) =  ht ↑(Quotient.out t) * g α hα := by
+    -- We have `gt = (GL2.unipotent t) * g`.
+    have m : (gt α hα (Quotient.out t)) = GL2.unipotent ↑(Quotient.out t) * g α hα := by
         ext i j; push_cast
-        rw[gt]; unfold ht; rw[gr, r, r, Matrix.mul_apply]
+        rw[gt]; unfold GL2.unipotent; rw[g_def, r, r, Matrix.mul_apply]
         simp only [Fin.sum_univ_two, Fin.isValue]
         fin_cases i; all_goals fin_cases j
         all_goals simp
     rw[gtU1, m, U1gU1]
-    use (ht ↑(Quotient.out t) * g α hα)
+    use (GL2.unipotent ↑(Quotient.out t) * g α hα)
     constructor
-    · use ht ↑(Quotient.out t)
+    · use GL2.unipotent ↑(Quotient.out t)
       constructor
-      · -- Show that `ht` is in `U1`.
-        unfold ht
+      · -- Show that `GL2.unipotent t` is in `U1`.
+        unfold GL2.unipotent
         constructor
         · let htInt : ((Matrix (Fin 2) (Fin 2) ↥(adicCompletionIntegers F v))ˣ) :=
             let htInv : Invertible !![1, (Quotient.out t); 0, 1].det :=
@@ -158,10 +161,10 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
     rw[gtU1, gtU1] at h
     -- If `gtU1 t₁ = gtU1 t₂`, then `(gt t₁)⁻¹ * (gt t₂)` is in `U1 v`.
     have m : (gt α hα (Quotient.out t₁))⁻¹ * gt α hα (Quotient.out t₂)
-      = ht ((α : v.adicCompletion F)⁻¹ *
+      = GL2.unipotent ((α : v.adicCompletion F)⁻¹ *
         (( - (Quotient.out t₁) + (Quotient.out t₂)) : adicCompletion F v )) := by
         apply inv_mul_eq_iff_eq_mul.mpr
-        rw [gt, gt]; unfold ht
+        rw [gt, gt]; unfold GL2.unipotent
         ext i j; push_cast
         rw[r, r, r, Matrix.mul_apply]
         simp only [Fin.sum_univ_two, Fin.isValue]
@@ -176,7 +179,7 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
     -- But inspecting the top-right entry of `(gt t₁)⁻¹ * (gt t₂)`
     -- gives us `t₁ = t₂`.
     apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 0 1) at y
-    unfold ht at y; rw[r] at y
+    unfold GL2.unipotent at y; rw[r] at y
     simp only [RingHom.toMonoidHom_eq_coe, Fin.isValue, Units.coe_map, MonoidHom.coe_coe,
       RingHom.mapMatrix_apply, ValuationSubring.coe_subtype, Matrix.map_apply, Matrix.of_apply,
       Matrix.cons_val', Matrix.cons_val_one, Matrix.cons_val_fin_one, Matrix.cons_val_zero] at y
@@ -264,7 +267,7 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
           Matrix.cons_val_fin_one]
         fin_cases i; all_goals fin_cases j
         all_goals simp; rfl
-      unfold m; push_cast; rw[hp2, gr]; norm_cast; rw[hp1]
+      unfold m; push_cast; rw[hp2, g_def]; norm_cast; rw[hp1]
       unfold mMatrix
       simp only [neg_mul, Matrix.cons_mul, Nat.succ_eq_add_one, Nat.reduceAdd, Matrix.vecMul_cons,
         Matrix.head_cons, Matrix.smul_cons, smul_eq_mul, mul_zero, Matrix.smul_empty,
