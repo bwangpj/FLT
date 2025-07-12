@@ -51,8 +51,8 @@ variable {F α hα} in
 noncomputable abbrev U1 : Subgroup (GL (Fin 2) (adicCompletion F v)) := (GL2.localTameLevel v)
 
 variable {F v} in
-/-- The matrix element `g = diag[α, 1]`. -/
-noncomputable abbrev g : (GL (Fin 2) (adicCompletion F v)) :=
+/-- The matrix element `diag[α, 1]`. -/
+noncomputable abbrev diag : (GL (Fin 2) (adicCompletion F v)) :=
   Matrix.GeneralLinearGroup.diagonal (![⟨(α : v.adicCompletion F),
     (α : v.adicCompletion F)⁻¹, by
       rw [mul_inv_cancel₀]
@@ -61,22 +61,22 @@ noncomputable abbrev g : (GL (Fin 2) (adicCompletion F v)) :=
       exact_mod_cast hα⟩, 1])
 
 variable {F v} in
-lemma g_def : (g α hα : Matrix (Fin 2) (Fin 2) (adicCompletion F v))
+lemma diag_def : (diag α hα : Matrix (Fin 2) (Fin 2) (adicCompletion F v))
   = !![↑α, 0; 0, 1] := by
-    rw[g]; ext i j
+    rw[diag]; ext i j
     rw[Matrix.GeneralLinearGroup.diagonal]
     fin_cases i; all_goals fin_cases j
     all_goals simp
 
 variable {F v} in
-/-- The double coset space `U1 g U1` as a set of left cosets. -/
-noncomputable abbrev U1gU1 :
+/-- The double coset space `U1 diag U1` as a set of left cosets. -/
+noncomputable abbrev U1diagU1 :
   Set ((GL (Fin 2) (adicCompletion F v)) ⧸ (U1 v)) :=
-  (QuotientGroup.mk '' ((U1 v) * {g α hα}))
+  (QuotientGroup.mk '' ((U1 v) * {diag α hα}))
 
 variable {F v} in
 /-- The unipotent matrix element `!![1, t; 0, 1]`. -/
-noncomputable def GL2.unipotent (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) :=
+noncomputable def unipotent (t : v.adicCompletion F) : (GL (Fin 2) (adicCompletion F v)) :=
   let htInv : Invertible !![1, t; 0, 1].det :=
   { invOf := 1,
     invOf_mul_self :=
@@ -111,29 +111,29 @@ noncomputable abbrev gtU1
 set_option maxHeartbeats 600000 in
 -- long explicit matrix coset computations
 variable {F v} in
-/-- The double coset space `U1gU1` is the disjoint union of `gtU1`
+/-- The double coset space `U1diagU1` is the disjoint union of `gtU1`
 as t ranges over `O_v / αO_v`. -/
-lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := by
+lemma U1diagU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1diagU1 α hα) := by
   have r (A : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) [Invertible A.det] :
     (↑(A.unitOfDetInvertible) : Matrix (Fin 2) (Fin 2) (adicCompletion F v)) = A := rfl
 
   constructor
-  · -- Show that `gtU1` is contained in `U1gU1` for all t.
+  · -- Show that `gtU1` is contained in `U1diagU1` for all t.
     intro t h
-    -- We have `gt = (GL2.unipotent t) * g`.
-    have m : (gt α hα (Quotient.out t)) = GL2.unipotent ↑(Quotient.out t) * g α hα := by
+    -- We have `gt = (unipotent t) * diag α hα`.
+    have m : (gt α hα (Quotient.out t)) = unipotent ↑(Quotient.out t) * diag α hα := by
         ext i j; push_cast
-        rw[gt]; unfold GL2.unipotent; rw[g_def, r, r, Matrix.mul_apply]
+        rw[gt]; unfold unipotent; rw[diag_def, r, r, Matrix.mul_apply]
         simp only [Fin.sum_univ_two, Fin.isValue]
         fin_cases i; all_goals fin_cases j
         all_goals simp
-    rw[gtU1, m, U1gU1]
-    use (GL2.unipotent ↑(Quotient.out t) * g α hα)
+    rw[gtU1, m, U1diagU1]
+    use (unipotent ↑(Quotient.out t) * diag α hα)
     constructor
-    · use GL2.unipotent ↑(Quotient.out t)
+    · use unipotent ↑(Quotient.out t)
       constructor
-      · -- Show that `GL2.unipotent t` is in `U1`.
-        unfold GL2.unipotent
+      · -- Show that `unipotent t` is in `U1 v`.
+        unfold unipotent
         constructor
         · let htInt : ((Matrix (Fin 2) (Fin 2) ↥(adicCompletionIntegers F v))ˣ) :=
             let htInv : Invertible !![1, (Quotient.out t); 0, 1].det :=
@@ -151,7 +151,7 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
           fin_cases i; all_goals fin_cases j
           all_goals simp; rfl
         rw[r]; simp
-      use g α hα
+      use diag α hα
       simp only [Set.mem_singleton_iff, and_self]
     rfl
 
@@ -161,10 +161,10 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
     rw[gtU1, gtU1] at h
     -- If `gtU1 t₁ = gtU1 t₂`, then `(gt t₁)⁻¹ * (gt t₂)` is in `U1 v`.
     have m : (gt α hα (Quotient.out t₁))⁻¹ * gt α hα (Quotient.out t₂)
-      = GL2.unipotent ((α : v.adicCompletion F)⁻¹ *
+      = unipotent ((α : v.adicCompletion F)⁻¹ *
         (( - (Quotient.out t₁) + (Quotient.out t₂)) : adicCompletion F v )) := by
         apply inv_mul_eq_iff_eq_mul.mpr
-        rw [gt, gt]; unfold GL2.unipotent
+        rw [gt, gt]; unfold unipotent
         ext i j; push_cast
         rw[r, r, r, Matrix.mul_apply]
         simp only [Fin.sum_univ_two, Fin.isValue]
@@ -179,7 +179,7 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
     -- But inspecting the top-right entry of `(gt t₁)⁻¹ * (gt t₂)`
     -- gives us `t₁ = t₂`.
     apply_fun (fun (A : (Matrix (Fin 2) (Fin 2) (adicCompletion F v))ˣ) ↦ A 0 1) at y
-    unfold GL2.unipotent at y; rw[r] at y
+    unfold unipotent at y; rw[r] at y
     simp only [RingHom.toMonoidHom_eq_coe, Fin.isValue, Units.coe_map, MonoidHom.coe_coe,
       RingHom.mapMatrix_apply, ValuationSubring.coe_subtype, Matrix.map_apply, Matrix.of_apply,
       Matrix.cons_val', Matrix.cons_val_one, Matrix.cons_val_fin_one, Matrix.cons_val_zero] at y
@@ -194,10 +194,10 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
     rw[y]; ring_nf; rw[mul_inv_cancel₀, one_mul, one_mul]
     exact (Subtype.coe_ne_coe.mpr hα)
 
-  -- Show that each coset in `U1gU1` is of the form `gtU1` for some t.
+  -- Show that each coset in `U1diagU1` is of the form `gtU1` for some t.
   -- This is the more involved part.
   rintro _ ⟨ _, ⟨ ⟨ w, ⟨ ⟨ x , y ⟩ , z ⟩, ⟨ _, rfl, rfl ⟩ ⟩ , rfl ⟩ ⟩
-  -- Each element of `U1gU1` can be written as
+  -- Each element of `U1diagU1` can be written as
   -- `x * g`, where `x = !![a,b;c,d]`
   -- is viewed as a matrix over `O_v`.
   let a : (adicCompletionIntegers F v) := (x 0 0)
@@ -249,7 +249,7 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
   apply QuotientGroup.eq.mpr
   -- We first compute `m := gt⁻¹ * x * g` explicitly,
   -- and denote the resulting matrix by `mMatrix`.
-  let m : GL (Fin 2) (adicCompletion F v) := (gt α hα (Quotient.out t))⁻¹ * w * g α hα
+  let m : GL (Fin 2) (adicCompletion F v) := (gt α hα (Quotient.out t))⁻¹ * w * diag α hα
   let mMatrix : Matrix (Fin 2) (Fin 2) (adicCompletion F v) :=
     !![a - (Quotient.out t) * c, (α : adicCompletion F v)⁻¹ * (b - (Quotient.out t) * d);
         c * α, d]
@@ -267,7 +267,7 @@ lemma U1gU1_cosetDecomposition : Set.BijOn (gtU1 α hα) ⊤ (U1gU1 α hα) := b
           Matrix.cons_val_fin_one]
         fin_cases i; all_goals fin_cases j
         all_goals simp; rfl
-      unfold m; push_cast; rw[hp2, g_def]; norm_cast; rw[hp1]
+      unfold m; push_cast; rw[hp2, diag_def]; norm_cast; rw[hp1]
       unfold mMatrix
       simp only [neg_mul, Matrix.cons_mul, Nat.succ_eq_add_one, Nat.reduceAdd, Matrix.vecMul_cons,
         Matrix.head_cons, Matrix.smul_cons, smul_eq_mul, mul_zero, Matrix.smul_empty,
