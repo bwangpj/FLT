@@ -27,6 +27,7 @@ import Mathlib.Algebra.Colimit.Module
 import Mathlib.RingTheory.Flat.Basic
 import FLT.DedekindDomain.FiniteAdeleRing.TensorPi
 import Mathlib.Order.DirectedInverseSystem
+import Mathlib.Algebra.Category.ModuleCat.Basic
 
 
 
@@ -35,7 +36,9 @@ section IsDirectLimit
 
 namespace Module
 
-variable {R : Type*} [Semiring R] {ι : Type*} [Preorder ι] (M : ι → Type*) (P : Type*)
+universe u
+
+variable {R : Type*} [Ring R] {ι : Type*} [Preorder ι] (M : ι → Type*) (P : Type u)
 variable [AddCommMonoid P] [Module R P]
 variable [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] (f : ∀ i j, i ≤ j → M i →ₗ[R] M j)
 variable (g : ∀ i, M i →ₗ[R] P) (Hg : ∀ i j hij x, g j (f i j hij x) = g i x)
@@ -44,7 +47,7 @@ variable [DecidableEq ι] [IsDirected ι (· ≤ ·)] [Nonempty ι] [DirectedSys
 @[mk_iff] class IsDirectLimit : Prop where
   compatibility : ∀ i j hij x, g j (f i j hij x) = g i x
   universal_property :
-    ∀ {X : Type*} [AddCommMonoid X] [Module R X],
+    ∀ {X : Type u} [AddCommMonoid X] [Module R X],
     ∀ gX : ∀ i, M i →ₗ[R] X, ∀ HgX : ∀ i j hij x, gX j (f i j hij x) = gX i x,
     ∃! φ : P →ₗ[R] X, ∀ i x, φ (g i x) = gX i x
 
@@ -61,7 +64,7 @@ instance isDirectLimit :
 
 section Iso
 
-variable (P₁ P₂ : Type*) [AddCommMonoid P₁] [Module R P₁] [AddCommMonoid P₂] [Module R P₂]
+variable (P₁ P₂ : Type u) [AddCommMonoid P₁] [Module R P₁] [AddCommMonoid P₂] [Module R P₂]
 variable (g₁ : ∀ i, M i →ₗ[R] P₁)
 variable (g₂ : ∀ i, M i →ₗ[R] P₂)
 
