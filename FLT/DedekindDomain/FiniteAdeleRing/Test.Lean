@@ -38,7 +38,7 @@ namespace Module
 
 universe u
 
-variable {R : Type*} [Ring R] {ι : Type*} [Preorder ι] (M : ι → Type*) (P : Type u)
+variable {R : Type*} [Semiring R] {ι : Type*} [Preorder ι] (M : ι → Type*) (P : Type u)
 variable [AddCommMonoid P] [Module R P]
 variable [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] (f : ∀ i j, i ≤ j → M i →ₗ[R] M j)
 variable (g : ∀ i, M i →ₗ[R] P) (Hg : ∀ i j hij x, g j (f i j hij x) = g i x)
@@ -48,7 +48,7 @@ variable [DecidableEq ι] [IsDirected ι (· ≤ ·)] [Nonempty ι] [DirectedSys
   compatibility : ∀ i j hij x, g j (f i j hij x) = g i x
   universal_property :
     ∀ {X : Type u} [AddCommMonoid X] [Module R X],
-    ∀ gX : ∀ i, M i →ₗ[R] X, ∀ HgX : ∀ i j hij x, gX j (f i j hij x) = gX i x,
+    ∀ gX : ∀ i, M i →ₗ[R] X, ∀ _ : ∀ i j hij x, gX j (f i j hij x) = gX i x,
     ∃! φ : P →ₗ[R] X, ∀ i x, φ (g i x) = gX i x
 
 instance isDirectLimit :
@@ -58,23 +58,64 @@ instance isDirectLimit :
   universal_property gX HgX :=
     ⟨Module.DirectLimit.lift R ι M f gX HgX,
       by simp,
-      by intro y hy; sorry⟩
-      -- this last part is the uniqueness;
-      -- shouldn't be too hard to use Module.DirectLimit.lift_unique here
+      by
+        intro y hy
+        ext x
+        convert Module.DirectLimit.lift_unique y x with i
+        ext x'
+        simp only [LinearMap.coe_comp, Function.comp_apply]
+        exact (hy i x').symm⟩
 
 section Iso
+
+theorem universal_prop_identity [h : IsDirectLimit M P f g] :
+  (h.universal_property g h.compatibility).exists.choose = LinearMap.id := by
+  apply ExistsUnique.unique (h.universal_property g h.compatibility)
+  · exact (h.universal_property g h.compatibility).exists.choose_spec
+  · simp only [LinearMap.id_coe, id_eq, implies_true]
+
+#check Submodule.mkQ
+theorem IsDirectLimit.surj' [h : IsDirectLimit M P f g] : ∀ m : P, ∃ i, ∃ mi : M i, g i mi = m := by
+  intro m
+  let Q : Submodule R P := Submodule.span R (⋃ i, Set.range (g i))
+
+
+  sorry
 
 variable (P₁ P₂ : Type u) [AddCommMonoid P₁] [Module R P₁] [AddCommMonoid P₂] [Module R P₂]
 variable (g₁ : ∀ i, M i →ₗ[R] P₁)
 variable (g₂ : ∀ i, M i →ₗ[R] P₂)
 
+set_option pp.proofs true in
 noncomputable def iso_of_isDirectLimit
     [h₁ : IsDirectLimit M P₁ f g₁] [h₂ : IsDirectLimit M P₂ f g₂] :
     P₁ ≃ₗ[R] P₂ where
   __ := (h₁.universal_property g₂ h₂.compatibility).exists.choose
-  invFun := sorry
-  left_inv := sorry
-  right_inv := sorry
+  invFun := (h₂.universal_property g₁ h₁.compatibility).exists.choose
+  left_inv := by
+    simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+    refine Function.leftInverse_iff_comp.mpr ?_
+    rw [← LinearMap.coe_comp, ← LinearMap.id_coe (R:=R)]
+    refine DFunLike.coe_fn_eq.mpr
+      (ExistsUnique.unique (h₁.universal_property g₁ h₁.compatibility) ?_ ?_)
+    · intro i mi
+      simp only [LinearMap.coe_comp, Function.comp_apply]
+      rw [(ExistsUnique.exists (h₁.universal_property g₂ h₂.compatibility)).choose_spec i mi,
+        (ExistsUnique.exists (h₂.universal_property g₁ h₁.compatibility)).choose_spec i mi]
+    · intro i mi
+      simp only [LinearMap.id_coe, id_eq]
+  right_inv := by
+    simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+    refine Function.rightInverse_iff_comp.mpr ?_
+    rw [← LinearMap.coe_comp, ← LinearMap.id_coe (R:=R)]
+    refine DFunLike.coe_fn_eq.mpr
+      (ExistsUnique.unique (h₂.universal_property g₂ h₂.compatibility) ?_ ?_)
+    · intro i mi
+      simp only [LinearMap.coe_comp, Function.comp_apply]
+      rw [(ExistsUnique.exists (h₂.universal_property g₁ h₁.compatibility)).choose_spec i mi,
+        (ExistsUnique.exists (h₁.universal_property g₂ h₂.compatibility)).choose_spec i mi]
+    · intro i mi
+      simp only [LinearMap.id_coe, id_eq]
 
 end Iso
 
@@ -92,39 +133,53 @@ variable [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] (f : ∀ i j, i �
 variable (g : ∀ i, M i →ₗ[R] P) (Hg : ∀ i j hij x, g j (f i j hij x) = g i x)
 variable [DecidableEq ι] [IsDirected ι (· ≤ ·)] [Nonempty ι] [DirectedSystem M (f · · ·)]
 
-@[mk_iff] class IsDirectLimit : Prop where
+@[mk_iff] class IsDirectLimit' : Prop where
   surj : ∀ m : P, ∃ i, ∃ mi : M i, g i mi = m
   inj :  ∀ i j, ∀ mi : M i, ∀ mj : M j, g i mi = g j mj → ∃ (k : ι) (hik : i ≤ k) (hjk : j ≤ k),
       f i k hik mi = f j k hjk mj
 
 variable [IsDirectLimit M P f g]
 
-include f in
-theorem IsDirectLimit.surj' : ∀ m : P, ∃ i, ∃ mi : M i, g i mi = m :=
-  IsDirectLimit.surj f
 
-instance isDirectLimit : IsDirectLimit M (Module.DirectLimit M f) f
+instance isDirectLimit' : IsDirectLimit' M (Module.DirectLimit M f) f
   (Module.DirectLimit.of R ι M f) where
   surj := Module.DirectLimit.exists_of
   inj i j mi mj h := by
     apply_fun Module.DirectLimit.linearEquiv _ _ at h
     simp_rw [Module.DirectLimit.linearEquiv_of] at h
+
     have ⟨k, hi, hj, hij⟩ := Quotient.exact h
     exact ⟨k, hi, hj, hij⟩
 
 
-noncomputable def iso : Module.DirectLimit M f ≃ₗ[R] P where
-  __ := Module.DirectLimit.lift R ι M f g Hg
-  invFun p :=
-    Module.DirectLimit.of R ι M f (Classical.choose (IsDirectLimit.surj' M P f g p))
-       (Classical.choose (Classical.choose_spec (IsDirectLimit.surj' M P f g p)))
-  left_inv x := by
-    simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+
+
+-- set_option pp.proofs true in
+-- noncomputable def iso : Module.DirectLimit M f ≃ₗ[R] P where
+--   __ := Module.DirectLimit.lift R ι M f g Hg
+--   invFun p := by
+--     set j := Classical.choose (IsDirectLimit.surj' M P f g p)
+--     set mj := (Classical.choose (Classical.choose_spec (IsDirectLimit.surj' M P f g p)))
+--     exact Module.DirectLimit.of R ι M f j mj
+--   left_inv x := by
+--     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+
+--     obtain ⟨i, mi, hmi⟩ := IsDirectLimit'.surj f (g := (Module.DirectLimit.of R ι M f)) x
+--     rw [← hmi]
+--     simp only [DirectLimit.lift_of]
+--     apply_fun Module.DirectLimit.linearEquiv _ _
+--     simp_rw [Module.DirectLimit.linearEquiv_of]
+--     simp only [Quotient.eq]
 
 
 
-    sorry
-  right_inv := sorry
+
+
+--     sorry
+--   right_inv p := by
+--     simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, DirectLimit.lift_of]
+--     exact Classical.choose_spec (Classical.choose_spec (IsDirectLimit.surj' M P f g p))
+
 
 end Module
 
@@ -151,7 +206,26 @@ def tensorMap (i : ι) : M i ⊗[R] N →ₗ[R] P ⊗[R] N :=
 instance : IsDirectLimit (fun i ↦ (M i ⊗[R] N)) (P ⊗[R] N) (incTensorMap M f N)
   (tensorMap M P g N) := sorry
 
+instance : DirectedSystem (fun i ↦ M i ⊗[R] N) fun x1 x2 x3 ↦ ⇑(incTensorMap M f N x1 x2 x3) :=
+  sorry
 
+#check (Module.iso_of_isDirectLimit (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)
+ (Module.DirectLimit (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)) (P ⊗[R] N)
+ (Module.DirectLimit.of R ι (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)) (tensorMap M P g N))
+
+include g in
+noncomputable def iso' :
+  (Module.DirectLimit (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)) ≃ₗ[R] (P ⊗[R] N) := by
+  haveI : DirectedSystem (fun i ↦ M i ⊗[R] N) fun x1 x2 x3 ↦ ⇑(incTensorMap M f N x1 x2 x3) := sorry
+  apply (Module.iso_of_isDirectLimit (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)
+    (Module.DirectLimit (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)) (P ⊗[R] N)
+    (Module.DirectLimit.of R ι (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N)) (tensorMap M P g N))
+
+
+
+instance : IsDirectLimit (fun i ↦ (M i ⊗[R] N))
+  (Module.DirectLimit (fun i ↦ (M i ⊗[R] N)) (incTensorMap M f N))
+  (incTensorMap M f N) (Module.DirectLimit.of R ι M f) := sorry
 
 
 
